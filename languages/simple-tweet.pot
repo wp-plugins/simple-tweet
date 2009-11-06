@@ -1,0 +1,132 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: simple-tweet\n"
+"POT-Creation-Date: 2009-11-06 09:55+0900\n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Description
+msgid "This is a plugin creating a new tweet including a URL of new post on your wordpress."
+msgstr ""
+
+#: ../simple-tweet.php:345
+msgid "Simple Tweet"
+msgstr ""
+
+#: ../simple-tweet.php:352
+msgid "Settings"
+msgstr ""
+
+#: ../simple-tweet.php:382
+#, php-format
+msgid "blogged: %1$s - %2$s"
+msgstr ""
+
+#: ../simple-tweet.php:387
+#, php-format
+msgid "RT @%1$s: %2$s - %3$s %4$s"
+msgstr ""
+
+#: ../simple-tweet.php:396
+msgid "Tweet this!"
+msgstr ""
+
+#: ../simple-tweet.php:672
+#: ../simple-tweet.php:683
+msgid "Done!"
+msgstr ""
+
+#: ../simple-tweet.php:689
+#: ../simple-tweet.php:716
+msgid "Simple Tweet Options"
+msgstr ""
+
+#: ../simple-tweet.php:696
+msgid "Update Options &raquo;"
+msgstr ""
+
+#: ../simple-tweet.php:701
+msgid "Uninstall"
+msgstr ""
+
+#: ../simple-tweet.php:704
+msgid "Delete all the settings of &quot;Simple Tweet&quot;."
+msgstr ""
+
+#: ../simple-tweet.php:705
+msgid "Delete Options &raquo;"
+msgstr ""
+
+#: ../simple-tweet.php:765
+#: ../simple-tweet.php:823
+msgid "Twitter ID"
+msgstr ""
+
+#: ../simple-tweet.php:770
+msgid "Twitter Password"
+msgstr ""
+
+#: ../simple-tweet.php:774
+msgid "If you would like to change the password type a new one. Otherwise leave this blank."
+msgstr ""
+
+#: ../simple-tweet.php:780
+msgid "Tweet text"
+msgstr ""
+
+#: ../simple-tweet.php:785
+msgid "Tweet without Permalink"
+msgstr ""
+
+#: ../simple-tweet.php:788
+msgid "Compress Permalink"
+msgstr ""
+
+#: ../simple-tweet.php:797
+msgid "Separator between message and Permalink"
+msgstr ""
+
+#: ../simple-tweet.php:805
+msgid "Add \"Tweet this\" link"
+msgstr ""
+
+#: ../simple-tweet.php:810
+msgid "Tweet this link"
+msgstr ""
+
+#: ../simple-tweet.php:815
+msgid "Tweet this text"
+msgstr ""
+
+#: ../simple-tweet.php:822
+msgid "The following characters are converted respectively."
+msgstr ""
+
+#: ../simple-tweet.php:824
+msgid "Site Name"
+msgstr ""
+
+#: ../simple-tweet.php:825
+msgid "Post No."
+msgstr ""
+
+#: ../simple-tweet.php:826
+msgid "Post Title"
+msgstr ""
+
+#: ../simple-tweet.php:827
+msgid "Post Excerpt"
+msgstr ""
+
+#: ../simple-tweet.php:828
+msgid "Permalink"
+msgstr ""
+
+#: ../simple-tweet.php:842
+msgid "Output log? (debug mode)"
+msgstr ""
+
