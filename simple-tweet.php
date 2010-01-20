@@ -1,19 +1,19 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.2.0
+Version: 1.2.1
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
 Author URI: http://dogmap.jp/
 Text Domain: simple-tweet
-Domain Path: languages
+Domain Path: /languages/
 
 License:
  Released under the GPL license
   http://www.gnu.org/copyleft/gpl.html
 
-  Copyright 2008 - 2009 wokamoto (email : wokamoto1973@gmail.com)
+  Copyright 2008 - 2010 wokamoto (email : wokamoto1973@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
  *************************************************************************************/
 class SimpleTweetController {
 	var $twitter_client_name = 'SimpleTweetWP';
-	var $twitter_client_version = '1.2.0';
+	var $twitter_client_version = '1.2.1';
 	var $twitter_client_url = 'http://dogmap.jp/2008/12/12/simple-tweet/';
 
 	var $options;
@@ -84,7 +84,6 @@ class SimpleTweetController {
 		'password' => '' ,
 		'separator' => ' ' ,
 		'tinyurl' => TRUE ,
-//		'shortlink' => FALSE ,
 		'tweet_text' => '' ,
 		'tweet_without_url' => FALSE ,
 		'add_content' => FALSE ,
@@ -118,9 +117,6 @@ class SimpleTweetController {
 
 		$this->option_name = $this->twitter_client_name . " Options";
 		$this->options = $this->_init_options( $this->_get_options() );
-
-//		if ( $this->options['shortlink'] && !class_exists('ShortLinkController') )
-//			require_once($this->_wp_plugin_dir($this->plugin_dir) . 'includes/short-link-maker.php');
 	}
 
 	//*****************************************************************************
@@ -965,6 +961,7 @@ if (is_admin()) {
 
 // post publish
 add_action('publish_post', array(&$simple_tweet, 'publish_post'));
+add_action('publish_future_post', array(&$simple_tweet, 'publish_post'));
 
 // for ktai-entry
 add_action('publish_phone', array(&$simple_tweet, 'publish_post'));

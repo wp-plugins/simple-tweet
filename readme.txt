@@ -3,8 +3,8 @@ Contributors: wokamoto
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJCY7XB8F4&lc=JP&item_name=WordPress%20Plugins&item_number=wp%2dplugins&currency_code=JPY&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: twitter, posts
 Requires at least: 2.8
-Tested up to: 2.8.5
-Stable tag: 1.2.0
+Tested up to: 2.9.1
+Stable tag: 1.2.1
 
 This is a plugin creating a new tweet including a URL of new post on your wordpress.
 
@@ -13,7 +13,8 @@ This is a plugin creating a new tweet including a URL of new post on your wordpr
 This is a plugin creating a new tweet including a URL of new post on your wordpress.
 
 You can use specific tweet phrases by post authors.
-And You can also tweet short URL of your domain if you introduce the plugin **[Short link maker](http://wordpress.org/extend/plugins/short-link-maker/ "WordPress › Short link maker « WordPress Plugins")**
+And You can also tweet short URL of your domain if you introduce the plugin **[Short link maker](http://wordpress.org/extend/plugins/short-link-maker/ "Short link maker")**.
+
 
 = Localization =
 
@@ -28,7 +29,8 @@ If you have translated into your language, please let me know.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Enter your user name and password of Twitter through the 'Simple Tweet' menu under 'Settings' in your dashboard.
 4. If you use specific settings by post author, you can set through 'your profile' menu under 'Users' in your dashboard.
-5. You can also tweet short URL of your domain if you introduce the plugin **[Short link maker](http://wordpress.org/extend/plugins/short-link-maker/ "WordPress › Short link maker « WordPress Plugins")**
+5. You can also tweet short URL of your domain if you introduce the plugin **[Short link maker](http://wordpress.org/extend/plugins/short-link-maker/ "Short link maker")**.
+6. You can also tweet short URL of wp.me if you introduce the plugin **[WordPress.com Stats](http://wordpress.org/extend/plugins/stats/ "WordPress.com Stats")**.
 
 == Frequently Asked Questions ==
 
@@ -47,6 +49,9 @@ Released under the [GPL license](http://www.gnu.org/copyleft/gpl.html).
 
 
 == Changelog == 
+
+**1.2.1 - January 20, 2010**  
+Fixed a bug that didn't work, "publish future post".
 
 **1.2.0 - November 5, 2009**  
 Initial release.
