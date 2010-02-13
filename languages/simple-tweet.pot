@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: simple-tweet\n"
-"POT-Creation-Date: 2009-11-06 09:55+0900\n"
+"POT-Creation-Date: 2010-02-10 10:19+0900\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -13,120 +13,178 @@ msgstr ""
 msgid "This is a plugin creating a new tweet including a URL of new post on your wordpress."
 msgstr ""
 
-#: ../simple-tweet.php:345
+#: ../simple-tweet.php:374
 msgid "Simple Tweet"
 msgstr ""
 
-#: ../simple-tweet.php:352
+#: ../simple-tweet.php:381
 msgid "Settings"
 msgstr ""
 
-#: ../simple-tweet.php:382
+#: ../simple-tweet.php:427
 #, php-format
 msgid "blogged: %1$s - %2$s"
 msgstr ""
 
-#: ../simple-tweet.php:387
+#: ../simple-tweet.php:432
 #, php-format
 msgid "RT @%1$s: %2$s - %3$s %4$s"
 msgstr ""
 
-#: ../simple-tweet.php:396
+#: ../simple-tweet.php:441
 msgid "Tweet this!"
 msgstr ""
 
-#: ../simple-tweet.php:672
-#: ../simple-tweet.php:683
+#: ../simple-tweet.php:794
+#: ../simple-tweet.php:820
+#: ../simple-tweet.php:831
 msgid "Done!"
 msgstr ""
 
-#: ../simple-tweet.php:689
-#: ../simple-tweet.php:716
+#: ../simple-tweet.php:837
+#: ../simple-tweet.php:864
 msgid "Simple Tweet Options"
 msgstr ""
 
-#: ../simple-tweet.php:696
+#: ../simple-tweet.php:844
 msgid "Update Options &raquo;"
 msgstr ""
 
-#: ../simple-tweet.php:701
+#: ../simple-tweet.php:849
 msgid "Uninstall"
 msgstr ""
 
-#: ../simple-tweet.php:704
+#: ../simple-tweet.php:852
 msgid "Delete all the settings of &quot;Simple Tweet&quot;."
 msgstr ""
 
-#: ../simple-tweet.php:705
+#: ../simple-tweet.php:853
 msgid "Delete Options &raquo;"
 msgstr ""
 
-#: ../simple-tweet.php:765
-#: ../simple-tweet.php:823
+#: ../simple-tweet.php:979
+msgid "Twitter OAuth"
+msgstr ""
+
+#: ../simple-tweet.php:984
+msgid "Get Consumer Key"
+msgstr ""
+
+#: ../simple-tweet.php:985
+msgid "Applications Using Twitter"
+msgstr ""
+
+#: ../simple-tweet.php:988
+msgid "Consumer Key"
+msgstr ""
+
+#: ../simple-tweet.php:992
+msgid "Consumer Secret"
+msgstr ""
+
+#: ../simple-tweet.php:1008
+msgid "OAuth authorize"
+msgstr ""
+
+#: ../simple-tweet.php:1009
+msgid "Click on the link to go to twitter to authorize your account."
+msgstr ""
+
+#: ../simple-tweet.php:1013
+msgid "PIN"
+msgstr ""
+
+#: ../simple-tweet.php:1020
+msgid "OAuth reset"
+msgstr ""
+
+#: ../simple-tweet.php:1032
+#: ../simple-tweet.php:1134
 msgid "Twitter ID"
 msgstr ""
 
-#: ../simple-tweet.php:770
-msgid "Twitter Password"
+#: ../simple-tweet.php:1036
+#: ../simple-tweet.php:1098
+msgid "User Name"
 msgstr ""
 
-#: ../simple-tweet.php:774
+#: ../simple-tweet.php:1040
+msgid "Password"
+msgstr ""
+
+#: ../simple-tweet.php:1044
 msgid "If you would like to change the password type a new one. Otherwise leave this blank."
 msgstr ""
 
-#: ../simple-tweet.php:780
+#: ../simple-tweet.php:1054
 msgid "Tweet text"
 msgstr ""
 
-#: ../simple-tweet.php:785
+#: ../simple-tweet.php:1059
 msgid "Tweet without Permalink"
 msgstr ""
 
-#: ../simple-tweet.php:788
+#: ../simple-tweet.php:1076
+msgid "Short Link"
+msgstr ""
+
+#: ../simple-tweet.php:1079
 msgid "Compress Permalink"
 msgstr ""
 
-#: ../simple-tweet.php:797
+#: ../simple-tweet.php:1099
+msgid "bit.ly API Key"
+msgstr ""
+
+#: ../simple-tweet.php:1102
+msgid "Other Service"
+msgstr ""
+
+#: ../simple-tweet.php:1108
 msgid "Separator between message and Permalink"
 msgstr ""
 
-#: ../simple-tweet.php:805
+#: ../simple-tweet.php:1116
 msgid "Add \"Tweet this\" link"
 msgstr ""
 
-#: ../simple-tweet.php:810
+#: ../simple-tweet.php:1121
 msgid "Tweet this link"
 msgstr ""
 
-#: ../simple-tweet.php:815
+#: ../simple-tweet.php:1126
 msgid "Tweet this text"
 msgstr ""
 
-#: ../simple-tweet.php:822
+#: ../simple-tweet.php:1133
 msgid "The following characters are converted respectively."
 msgstr ""
 
-#: ../simple-tweet.php:824
+#: ../simple-tweet.php:1135
 msgid "Site Name"
 msgstr ""
 
-#: ../simple-tweet.php:825
+#: ../simple-tweet.php:1136
 msgid "Post No."
 msgstr ""
 
-#: ../simple-tweet.php:826
+#: ../simple-tweet.php:1137
 msgid "Post Title"
 msgstr ""
 
-#: ../simple-tweet.php:827
+#: ../simple-tweet.php:1138
 msgid "Post Excerpt"
 msgstr ""
 
-#: ../simple-tweet.php:828
+#: ../simple-tweet.php:1139
 msgid "Permalink"
 msgstr ""
 
-#: ../simple-tweet.php:842
+#: ../simple-tweet.php:1153
 msgid "Output log? (debug mode)"
 msgstr ""
+
+msgid "<a href=\"http://wppluginsj.sourceforge.jp/simple-tweet/simple-tweet-oauth-en/\" title=\"WordPress Plugins/JSeries » Simple Tweet OAuth Setting\">OAuth Setting</a>"
+msgstr ""
+
 
