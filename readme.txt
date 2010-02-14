@@ -1,7 +1,7 @@
 === Simple Tweet ===
 Contributors: wokamoto
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJCY7XB8F4&lc=JP&item_name=WordPress%20Plugins&item_number=wp%2dplugins&currency_code=JPY&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
-Tags: twitter, posts
+Tags: twitter, posts, OAuth, shortlink
 Requires at least: 2.8
 Tested up to: 2.9.1
 Stable tag: 1.3.0
@@ -15,6 +15,7 @@ This is a plugin creating a new tweet including a URL of new post on your wordpr
 You can use specific tweet phrases by post authors.
 And You can also tweet short URL of your domain if you introduce the plugin **[Short link maker](http://wordpress.org/extend/plugins/short-link-maker/ "Short link maker")**.
 
+**PHP5 Required.**
 
 = Localization =
 
