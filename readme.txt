@@ -15,6 +15,7 @@ This is a plugin creating a new tweet including a URL of new post on your wordpr
 You can use specific tweet phrases by post authors.
 And You can also tweet short URL of your domain if you introduce the plugin **[Short link maker](http://wordpress.org/extend/plugins/short-link-maker/ "Short link maker")**.
 
+**PHP5 Required.**
 
 = Localization =
 

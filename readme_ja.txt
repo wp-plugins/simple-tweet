@@ -15,6 +15,8 @@ WordPress に新規投稿した際、自動的に Twitter に通知するプラ�
 投稿ユーザごとに、Twitter アカウント・Twitter に通知する文章などを変更することができます。
 また、プラグイン **[Short link maker](http://wordpress.org/extend/plugins/short-link-maker/ "WordPress › Short link maker « WordPress Plugins")** を導入すると、自ドメインを利用した短縮URLを Twitter に投稿することができます。
 
+**PHP5 以降のみ対応です。**
+
 = Localization =
 
 * English (en) - [odyssey](http://www.odysseygate.com/ "Odysseygate.com")
