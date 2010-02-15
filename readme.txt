@@ -52,9 +52,9 @@ First of all, you have to register a new application on Twitter, and get "**Cons
    * Organization ... Input the name of the organization whichi makes the application. Your name or nickname may be good.
    * Website ... Input the website of the organization which makes the application.
    * Application Type ... Input the type of the application.
-     * Select "**Client**" on this item.
+     Select "**Client**" on this item.
    * Default Access type ... This item allows the application to "read and write" or "read-only".
-     * Select "**Read &amp; Write**" on this item.
+     Select "**Read &amp; Write**" on this item.
    * Use Twitter for login ... If you use Twitter id on authentication, check this. You may not need to check this.
 4. Upon success of the application registration, then you can see application information.
    "Consumer Key" and "Consumer Secret" displayed here are important.
