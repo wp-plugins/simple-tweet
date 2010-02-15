@@ -49,9 +49,9 @@ Simple Tweet の Ver.1.3.0 以降は Twitter の OAuth 認証に対応しまし�
    * Organization ... 作ってる組織。自分の名前（ニックネーム）でいいでしょう
    * Website ... 作ってる組織のウェブサイト
    * Application Type ... アプリケーションの種類
-     * ※これは、「**Client**」を選択してください。
+     ※これは、「**Client**」を選択してください。
    * Default Access type ... アプリケーションに「読み書き」を許可するか「読込のみ」を許可するか
-     * ※これは、「**Read &amp; Write**」を選択してください。
+     ※これは、「**Read &amp; Write**」を選択してください。
    * Use Twitter for login ... twitterのidを認証に使用する場合チェック。未チェックで良いです
 4. アプリケーションの登録に成功すると、アプリケーション情報が表示されます。
    ここで表示される「Consumer Key」と「Consumer Secret」が重要です。
