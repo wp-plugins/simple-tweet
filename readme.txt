@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJ
 Tags: twitter, posts, OAuth, shortlink
 Requires at least: 2.8
 Tested up to: 2.9.1
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 
 This is a plugin creating a new tweet including a URL of new post on your wordpress.
 
@@ -66,7 +66,7 @@ Next, you have to authorize your account by OAuth.
 
 1. If you input "Consumer Key" and "Consumer Secret", you can see the link "Click on the link to go to twitter to authorize your account." on settings of "Simple Tweet" or profile of each users.
    Click this link.
-2. When You're asked to accept access of the application you registerd, then click "accept".
+2. When You're asked to accept access of the application you registerd, then click "Allow".
    If you can't this page, application registration on twitter may be incomplete ,or "Consumer Key" and "Consumer Secret" you input may be wrong.
    If they are not wrong, after a while try to click the link "Click on the link to go to twitter to authorize your account." again
 3. You can see a few digits of a number as PIN.
@@ -94,6 +94,9 @@ Released under the [GPL license](http://www.gnu.org/copyleft/gpl.html).
 
 
 == Changelog == 
+
+**1.3.1 - February 15, 2010**  
+Minor bug fixes.
 
 **1.3.0 - February 10, 2010**  
 Added support for OAuth.

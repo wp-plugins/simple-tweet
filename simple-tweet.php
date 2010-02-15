@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.0
+Version: 1.3.1
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -28,6 +28,14 @@ License:
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+Includes:
+ abraham's twitteroauth at master - GitHub
+  PHP library for working with Twitter's OAuth API.
+  Copyright (c) 2009 Abraham Williams - http://abrah.am - abraham@poseurte.ch
+  Documentation: http://wiki.github.com/abraham/twitteroauth/documentation
+  Source: http://github.com/abraham/twitteroauth
+  Twitter: http://apiwiki.twitter.com
 */
 
 /**************************************************************************************
@@ -57,7 +65,7 @@ global $simple_tweet;
 /**************************************************************************************
  * Require Twitter OAuth
  *************************************************************************************/
-if ( !class_exists('TwitterOAuth') )
+if ( version_compare(phpversion(), "5.0.0", ">=") && function_exists('curl_init') && !class_exists('TwitterOAuth') )
 	require_once(dirname(__FILE__).'/includes/twitterOAuth.php');
 
 
@@ -84,7 +92,7 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
  *************************************************************************************/
 class SimpleTweetController {
 	var $twitter_client_name = 'SimpleTweetWP';
-	var $twitter_client_version = '1.3.0';
+	var $twitter_client_version = '1.3.1';
 	var $twitter_client_url = 'http://wordpress.org/extend/plugins/simple-tweet/';
 
 	var $options;
@@ -104,7 +112,6 @@ class SimpleTweetController {
 		'add_content' => FALSE ,
 		'tweet_this_link' => '' ,
 		'tweet_this_text' => '' ,
-//		'retry_limit' => 5,
 		'log_write' => FALSE ,
 		'activate' => 0 ,
 		'deactivate' => 0 ,
@@ -546,9 +553,10 @@ class SimpleTweetController {
 				$tweet_msg = mb_substr($msg, 0, TWEET_MAX - (mb_strlen($permalink, $this->charset) + 3), $this->charset) . '...' . $permalink;
 			$this->_log .= "tweet message:{$tweet_msg}\n";
 
-			if ( !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->options['access_token']) && !is_null($this->options['access_token_secret']) )
+			$tweet_result = FALSE;
+			if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->options['access_token']) && !is_null($this->options['access_token_secret']) )
 				$tweet_result = $this->_post_twitter_OAuth($tweet_msg, $this->options['access_token'], $this->options['access_token_secret']);
-			else
+			if ( $tweet_result === FALSE )
 				$tweet_result = $this->_post_twitter($tweet_msg, $this->options['user'], $this->options['password']);
 
 			if ( $tweet_result !== FALSE ) {
@@ -577,7 +585,10 @@ class SimpleTweetController {
 	// Post to Twitter (OAuth)!
 	//*****************************************************************************
 	function _post_twitter_OAuth( $tweet, $access_token = null, $access_token_secret = null ) {
-		if (empty($tweet) || is_null($access_token) || is_null($access_token_secret))
+		if ( !class_exists('TwitterOAuth') || is_null($this->consumer_key) || is_null($this->consumer_secret) )
+			return FALSE;
+
+		if ( empty($tweet) || is_null($access_token) || is_null($access_token_secret) )
 			return FALSE;
 
 		$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret, $access_token, $access_token_secret);
@@ -718,7 +729,7 @@ class SimpleTweetController {
 			return '';
 
 		$result = $this->_get_TinyURL($url, sprintf(TWEET_BITLY_URL, $user, $apikey));
-		$result = preg_replace('/[ \t\r\n]*/', '', $result);
+		$result = preg_replace('/[ \t\r\n]+/', '', $result);
 		$result = preg_replace('/^.*[\'"]shortUrl[\'"]:[\'"]([^\'"]*)[\'"].*$/i', '$1', $result);
 
 		return ($this->_chk_url($result) ? $result : $url);
@@ -805,7 +816,7 @@ class SimpleTweetController {
 		} elseif ( isset($_GET['oauth_token']) ) {
 			$request = $this->_strip_array($_GET);
 
-			if ( !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->request_token) && !is_null($this->request_token_secret) ) {
+			if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->request_token) && !is_null($this->request_token_secret) ) {
 				$oauth_token = $request['oauth_token'];
 				if ( $oauth_token !== $this->options['oauth_token'] ) {
 					$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret, $this->request_token, $this->request_token_secret);
@@ -896,7 +907,7 @@ class SimpleTweetController {
 		if ( isset($request['twitter_pwd']) && trim($request['twitter_pwd']) !== '' )
 			$options['password'] = $request['twitter_pwd'];
 
-		if ( !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->request_token) && !is_null($this->request_token_secret) ) {
+		if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->request_token) && !is_null($this->request_token_secret) ) {
 			$twitter_pin = $access_token = $access_token_secret = null;
 			$twitter_pin = (isset($request['twitter_pin']) && !empty($request['twitter_pin']) ?  trim($request['twitter_pin']) : null); 
 			if ( $twitter_pin !== $options['pin'] ) {
@@ -964,7 +975,6 @@ class SimpleTweetController {
 		$options['add_content']     = (isset($request['add_content']) && $request['add_content'] == 'on' ? true : false);
 
 		if ( $is_admin ) {
-			$options['retry_limit'] = (int) (isset($request['retry_limit']) ? $request['retry_limit'] : 0);
 			$options['log_write']   = (isset($request['log_write']) && $request['log_write'] == 'on' ? true : false);
 			$options['activate']    = time();
 			$options['deactivate']  = 0;
@@ -985,60 +995,72 @@ class SimpleTweetController {
 
 		$out .= "<table class=\"optiontable form-table\" style=\"margin-top:0;\"><tbody>\n";
 
-		if ( $is_admin || (!is_null($this->consumer_key) && !is_null($this->consumer_secret)) ) {
+		if ( class_exists('TwitterOAuth') ) {
+			if ( $is_admin || (!is_null($this->consumer_key) && !is_null($this->consumer_secret)) ) {
+				$out .= "<tr>";
+				$out .= "<th>";
+				$out .= __('Twitter OAuth', $this->textdomain_name);
+				if ( is_null($options['access_token']) || is_null($options['access_token_secret']) ) {
+					$out .= '<br/>'.__('<a href="http://wppluginsj.sourceforge.jp/simple-tweet/simple-tweet-oauth-en/" title="WordPress Plugins/JSeries » Simple Tweet OAuth Setting">OAuth Setting</a>', $this->textdomain_name);
+				}
+				$out .= "</th>";
+				$out .= "<td>";
+				$out .= "<table style=\"margin-top:0;\"><tbody>\n";
+				if ( $is_admin ) {
+					$out .= "<tr>";
+					$out .= '<th style="width:120px;padding:0;">'.__('Get Consumer Key', $this->textdomain_name)."</th>";
+					$out .= '<td style="padding:0;"><a href="'.TWEET_OAUTH_CLIENTS_URL.'" target="_blank">'.__('Applications Using Twitter', $this->textdomain_name).'</a></td>';
+					$out .= "</tr>\n";
+					$out .= "<tr>";
+					$out .= '<th style="width:120px;padding:0;">'.__('Consumer Key', $this->textdomain_name)."</th>";
+					$out .= "<td style=\"padding:0;\"><input type=\"text\" name=\"consumer_key\" id=\"consumer_key\" size=\"50\" value=\"{$this->consumer_key}\" /></td>";
+					$out .= "</tr>\n";
+					$out .= "<tr>";
+					$out .= '<th style="width:120px;padding:0;">'.__('Consumer Secret', $this->textdomain_name)."</th>";
+					$out .= "<td style=\"padding:0;\"><input type=\"text\" name=\"consumer_secret\" id=\"consumer_secret\" size=\"50\" value=\"{$this->consumer_secret}\" /></td>";
+					$out .= "</tr>\n";
+				}
+				if ( !is_null($this->consumer_key) && !is_null($this->consumer_secret) ) {
+					if ( is_null($options['access_token']) || is_null($options['access_token_secret']) ) {
+						$this->request_token = $this->request_token_secret = null;
+						$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret);
+						$token = $oauth->getRequestToken();
+						$this->options['request_token'] = $this->request_token = $token['oauth_token'];
+						$this->options['request_token_secret'] = $this->request_token_secret = $token['oauth_token_secret'];
+						$request_link = $oauth->getAuthorizeURL($this->request_token);
+						$this->_update_options();
+						unset($oauth);
+
+						$out .= "<tr>";
+						$out .= '<th style="width:120px;padding:0;">'.__('OAuth', $this->textdomain_name)."</th>";
+						$out .= "<td style=\"padding:0;\"><a href=\"{$request_link}\" target=\"_blank\">".__('Click on the link to go to twitter to authorize your account.', $this->textdomain_name).'</a></td>';
+						$out .= "</tr>\n";
+
+						$out .= "<tr>";
+						$out .= '<th style="width:120px;padding:0;">'.__('PIN', $this->textdomain_name)."</th>";
+						$out .= "<td style=\"padding:0;\"><input type=\"text\" name=\"twitter_pin\" id=\"twitter_pin\" size=\"50\" value=\"{$options['pin']}\" /></td>";
+						$out .= "</tr>\n";
+					} else {
+						$out .= "<tr>";
+						$out .= '<td colspan="2" style="padding:0;">';
+						$out .= '<input type="checkbox" name="oauth_reset" id="oauth_reset" value="on" /> ';
+						$out .= __('OAuth reset', $this->textdomain_name);
+						$out .= "</td>";
+						$out .= "</tr>\n";
+					}
+				}
+				$out .= "</tbody></table>\n";
+				$out .= "</td>";
+				$out .= "</tr>\n";
+			}
+
+		} else {
 			$out .= "<tr>";
 			$out .= "<th>";
 			$out .= __('Twitter OAuth', $this->textdomain_name);
-			if ( is_null($options['access_token']) || is_null($options['access_token_secret']) ) {
-				$out .= '<br/>'.__('<a href="http://wppluginsj.sourceforge.jp/simple-tweet/simple-tweet-oauth-en/" title="WordPress Plugins/JSeries » Simple Tweet OAuth Setting">OAuth Setting</a>', $this->textdomain_name);
-			}
 			$out .= "</th>";
 			$out .= "<td>";
-			$out .= "<table style=\"margin-top:0;\"><tbody>\n";
-			if ( $is_admin ) {
-				$out .= "<tr>";
-				$out .= '<th style="width:120px;padding:0;">'.__('Get Consumer Key', $this->textdomain_name)."</th>";
-				$out .= '<td style="padding:0;"><a href="'.TWEET_OAUTH_CLIENTS_URL.'" target="_blank">'.__('Applications Using Twitter', $this->textdomain_name).'</a></td>';
-				$out .= "</tr>\n";
-				$out .= "<tr>";
-				$out .= '<th style="width:120px;padding:0;">'.__('Consumer Key', $this->textdomain_name)."</th>";
-				$out .= "<td style=\"padding:0;\"><input type=\"text\" name=\"consumer_key\" id=\"consumer_key\" size=\"50\" value=\"{$this->consumer_key}\" /></td>";
-				$out .= "</tr>\n";
-				$out .= "<tr>";
-				$out .= '<th style="width:120px;padding:0;">'.__('Consumer Secret', $this->textdomain_name)."</th>";
-				$out .= "<td style=\"padding:0;\"><input type=\"text\" name=\"consumer_secret\" id=\"consumer_secret\" size=\"50\" value=\"{$this->consumer_secret}\" /></td>";
-				$out .= "</tr>\n";
-			}
-			if ( !is_null($this->consumer_key) && !is_null($this->consumer_secret) ) {
-				if ( is_null($options['access_token']) || is_null($options['access_token_secret']) ) {
-					$this->request_token = $this->request_token_secret = null;
-					$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret);
-					$token = $oauth->getRequestToken();
-					$this->options['request_token'] = $this->request_token = $token['oauth_token'];
-					$this->options['request_token_secret'] = $this->request_token_secret = $token['oauth_token_secret'];
-					$request_link = $oauth->getAuthorizeURL($this->request_token);
-					$this->_update_options();
-					unset($oauth);
-
-					$out .= "<tr>";
-					$out .= '<th style="width:120px;padding:0;">'.__('OAuth', $this->textdomain_name)."</th>";
-					$out .= "<td style=\"padding:0;\"><a href=\"{$request_link}\" target=\"_blank\">".__('Click on the link to go to twitter to authorize your account.', $this->textdomain_name).'</a></td>';
-					$out .= "</tr>\n";
-
-					$out .= "<tr>";
-					$out .= '<th style="width:120px;padding:0;">'.__('PIN', $this->textdomain_name)."</th>";
-					$out .= "<td style=\"padding:0;\"><input type=\"text\" name=\"twitter_pin\" id=\"twitter_pin\" size=\"50\" value=\"{$options['pin']}\" /></td>";
-					$out .= "</tr>\n";
-				} else {
-					$out .= "<tr>";
-					$out .= '<td colspan="2" style="padding:0;">';
-					$out .= '<input type="checkbox" name="oauth_reset" id="oauth_reset" value="on" /> ';
-					$out .= __('OAuth reset', $this->textdomain_name);
-					$out .= "</td>";
-					$out .= "</tr>\n";
-				}
-			}
-			$out .= "</tbody></table>\n";
+			$out .= __('Twitter OAuth supports PHP5 or later.', $this->textdomain_name);
 			$out .= "</td>";
 			$out .= "</tr>\n";
 		}
@@ -1096,7 +1118,7 @@ class SimpleTweetController {
 		$out .= "<br />\n";
 		if ( !function_exists('get_shortlink') ) {
 			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"tinyurl\" value=\"tinyurl\" ".($tinyurl ? 'checked="checked " ' : '')."/> ";
-			$out .= '<a href="http://tinyurl.com/">TinyURL</a>';
+			$out .= '<a href="http://tinyurl.com/" title="TinyURL.com - shorten that long URL into a tiny URL">TinyURL</a>';
 			$out .= "<br />\n";
 		} else {
 			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"shortlink\" value=\"shortlink\" ".($shortlink ? 'checked="checked " ' : '')."/> ";
@@ -1106,11 +1128,11 @@ class SimpleTweetController {
 			  );
 			$out .= "<br />\n";
 			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"tinyurl\" value=\"tinyurl\" ".($tinyurl ? 'checked="checked " ' : '')."/> ";
-			$out .= '<a href="http://tinyurl.com/">TinyURL</a>';
+			$out .= '<a href="http://tinyurl.com/" title="TinyURL.com - shorten that long URL into a tiny URL">TinyURL</a>';
 			$out .= "<br />\n";
 		}
 		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"bitly\" value=\"bitly\" ".($bitly ? 'checked="checked " ' : '')."/> ";
-		$out .= '<a href="http://bit.ly/">bit.ly</a> : ';
+		$out .= '<a href="http://bit.ly/" title="bit.ly, a simple url shortener">bit.ly</a> : ';
 		$out .= __('User Name', $this->textdomain_name)."<input type=\"text\" name=\"bitly_name\" id=\"bitly_name\" size=\"20\" value=\"".htmlspecialchars( $options['bitly'][1] )."\" /> ";
 		$out .= __('bit.ly API Key', $this->textdomain_name)."<input type=\"text\" name=\"bitly_api\" id=\"bitly_api\" size=\"30\" value=\"".htmlspecialchars( $options['bitly'][2] )."\" /> ";
 		$out .= "<br />\n";
@@ -1157,11 +1179,6 @@ class SimpleTweetController {
 		$out .= "</tr>\n";
 
 		if ( $is_admin ) {
-//			$out .= "<tr>";
-//			$out .= "<th>".__('Set Retry Limit', $this->textdomain_name)."</th>";
-//			$out .= "<td><input type=\"text\" name=\"retry_limit\" id=\"retry_limit\" size=\"50\" value=\"".htmlspecialchars($options['retry_limit'])."\" /></td>";
-//			$out .= "</tr>\n";
-
 			$out .= "<tr>";
 			$out .= "<th></th>";
 			$out .= "<td>";
