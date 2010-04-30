@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.1
+Version: 1.3.2
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -46,11 +46,15 @@ define('TWEET_TIMEOUT', 30);
 define('TWEET_HOME_URL', 'http://twitter.com/' );
 define('TWEET_SENT_URL', 'http://twitter.com/statuses/update.xml');
 define('TWEET_OAUTH_CLIENTS_URL', 'http://twitter.com/oauth_clients');
-define('TWEET_TINYURL_URL', 'http://tinyurl.com/api-create.php?url=');
 define('TWEET_TINYURL_LIMIT', 60 * 60 * 24 * 30 * 6);
+define('TWEET_TINYURL_URL', 'http://tinyurl.com/api-create.php?url=');
 define('TWEET_BITLY_URL', 'http://api.bit.ly/shorten?version=2.0.1&login=%s&apiKey=%s&longUrl=');
 define('TWEET_BITLY_USER', 'bitlyapidemo');
 define('TWEET_BITLY_APIKEY', 'R_0da49e0a9118ff35f52f629d2d71bf07');
+define('TWEET_JMP_URL', 'http://api.j.mp/shorten?version=2.0.1&&login=%s&apiKey=%s&longUrl=');
+define('TWEET_JMP_USER', '');
+define('TWEET_JMP_APIKEY', '');
+define('TWEET_ISGD_URL', 'http://is.gd/api.php?longurl=');
 
 define('TWEET_METAKEY_SID', 'twitter_id');
 define('TWEET_METAKEY_URL', '_tiny_url');
@@ -92,7 +96,7 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
  *************************************************************************************/
 class SimpleTweetController {
 	var $twitter_client_name = 'SimpleTweetWP';
-	var $twitter_client_version = '1.3.1';
+	var $twitter_client_version = '1.3.2';
 	var $twitter_client_url = 'http://wordpress.org/extend/plugins/simple-tweet/';
 
 	var $options;
@@ -106,6 +110,8 @@ class SimpleTweetController {
 		'shorten' => TRUE ,
 		'tinyurl' => array(FALSE, TWEET_TINYURL_URL) ,
 		'bitly' => array(FALSE, TWEET_BITLY_USER, TWEET_BITLY_APIKEY) ,
+		'jmp' => array(FALSE, TWEET_JMP_USER, TWEET_JMP_APIKEY) ,
+		'isgd' => array(FALSE, TWEET_ISGD_URL) ,
 		'other_tinyurl' => array(FALSE, TWEET_TINYURL_URL) ,
 		'tweet_text' => '' ,
 		'tweet_without_url' => FALSE ,
@@ -460,13 +466,13 @@ class SimpleTweetController {
 			if ( isset($options['tinyurl']) ) {
 				if ( !is_array($options['tinyurl']) ) {
 					$options['shorten'] = $options['tinyurl'];
-					$options['tinyurl'] = array( !function_exists('get_shortlink'), TWEET_TINYURL_URL );
+					$options['tinyurl'] = array( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')), TWEET_TINYURL_URL );
 				} else {
 					$options['shorten'] = $options['tinyurl'][0];
 				}
 			} else {
 				$options['shorten'] = true;
-				$options['tinyurl'] = array( !function_exists('get_shortlink'), TWEET_TINYURL_URL );
+				$options['tinyurl'] = array( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')), TWEET_TINYURL_URL );
 			}
 		}
 
@@ -708,11 +714,17 @@ class SimpleTweetController {
 			if ( $options['tinyurl'][0] ) {
 				$shortlink = $this->_get_TinyURL($permalink, TWEET_TINYURL_URL);
 			} elseif ( $options['bitly'][0] ) {
-				$shortlink = $this->_get_bitly($permalink, $options['bitly'][1], $options['bitly'][2]);
+				$shortlink = $this->_get_bitly($permalink, TWEET_BITLY_URL, $options['bitly'][1], $options['bitly'][2]);
+			} elseif ( $options['jmp'][0] ) {
+				$shortlink = $this->_get_bitly($permalink, TWEET_JMP_URL, $options['jmp'][1], $options['jmp'][2]);
+			} elseif ( $options['isgd'][0] ) {
+				$shortlink = $this->_get_TinyURL(urlencode($permalink), TWEET_ISGD_URL);
 			} elseif ( $options['other_tinyurl'][0] ) {
 				$shortlink = $this->_get_TinyURL($permalink, $options['other_tinyurl'][1]);
 			} elseif ( function_exists('get_shortlink') ) {
 				$shortlink = get_shortlink($post_id);
+			} elseif ( function_exists('wpme_get_shortlink') ) {
+				$shortlink = wpme_get_shortlink($post_id);
 			} else {
 				$shortlink = $this->_get_TinyURL($permalink);
 			}
@@ -724,13 +736,17 @@ class SimpleTweetController {
 	//*****************************************************************************
 	// Get bit.ly
 	//*****************************************************************************
-	function _get_bitly($url = '', $user = TWEET_BITLY_USER, $apikey = TWEET_BITLY_APIKEY ) {
-		if (empty($url))
-			return '';
+	function _get_bitly($url = '', $get_url = TWEET_BITLY_URL, $user = TWEET_BITLY_USER, $apikey = TWEET_BITLY_APIKEY ) {
+		if (empty($url) || empty($user) || empty($apikey))
+			return $url;
 
-		$result = $this->_get_TinyURL($url, sprintf(TWEET_BITLY_URL, $user, $apikey));
-		$result = preg_replace('/[ \t\r\n]+/', '', $result);
-		$result = preg_replace('/^.*[\'"]shortUrl[\'"]:[\'"]([^\'"]*)[\'"].*$/i', '$1', $result);
+		$result = $this->_get_TinyURL(urlencode($url), sprintf($get_url, $user, $apikey));
+		if ( preg_match( '/[\'"]shortUrl[\'"]:[ \t]*[\'"]([^\'"]*)[\'"]/iUs', $result, $matches ) ) {
+			$result = (isset($matches[1]) ? $matches[1] : $url);
+		} else {
+			$result = $url;
+		}
+		unset($matches);
 
 		return ($this->_chk_url($result) ? $result : $url);
 	}
@@ -907,10 +923,13 @@ class SimpleTweetController {
 		if ( isset($request['twitter_pwd']) && trim($request['twitter_pwd']) !== '' )
 			$options['password'] = $request['twitter_pwd'];
 
+		$twitter_pin  = $options['pin'];
+		$access_token = $options['access_token'];
+		$access_token_secret = $options['access_token_secret'];
 		if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->request_token) && !is_null($this->request_token_secret) ) {
 			$twitter_pin = $access_token = $access_token_secret = null;
 			$twitter_pin = (isset($request['twitter_pin']) && !empty($request['twitter_pin']) ?  trim($request['twitter_pin']) : null); 
-			if ( $twitter_pin !== $options['pin'] ) {
+			if ( !is_null($twitter_pin) && $twitter_pin !== $options['pin'] ) {
 				$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret, $this->request_token, $this->request_token_secret);
 				$token = $oauth->getAccessToken(null, $twitter_pin);
 				$access_token = $token['oauth_token'];
@@ -920,16 +939,18 @@ class SimpleTweetController {
 				$options['oauth_token'] = $this->oauth_token = null;
 				$options['access_token'] = $access_token;
 				$options['access_token_secret'] = $access_token_secret;
+			} else {
+				$twitter_pin = $options['pin'];
 			}
 			$this->request_token = $this->request_token_secret = null;
 		}
-		if ( isset($request['oauth_reset']) && $request == 'on' ) {
-			$options['pin']  = null;
+		if ( isset($request['oauth_reset']) && $request['oauth_reset'] == 'on' ) {
+			$options['pin'] = null;
 			$options['oauth_token'] = $this->oauth_token = null;
 			$options['access_token'] = null;
 			$options['access_token_secret'] = null;
 		} else {
-			$options['pin']  = $twitter_pin;
+			$options['pin'] = $twitter_pin;
 			$options['access_token'] = $access_token;
 			$options['access_token_secret'] = $access_token_secret;
 		}
@@ -939,7 +960,7 @@ class SimpleTweetController {
 		$options['tweet_text'] = $request['tweet_text'];
 		$options['separator']  = $request['separator'];
 
-		$shortlink = $tinyurl = $bitly = $other = false;
+		$shortlink = $tinyurl = $bitly = $jmp = $isgd = $other = false;
 		switch ($request['shortlink']) {
 		case 'shortlink':
 			$shortlink = true;
@@ -950,6 +971,12 @@ class SimpleTweetController {
 		case 'bitly':
 			$bitly = true;
 			break;
+		case 'jmp':
+			$jmp = true;
+			break;
+		case 'isgd':
+			$isgd = true;
+			break;
 		case 'other':
 			$other = true;
 			break;
@@ -957,12 +984,10 @@ class SimpleTweetController {
 			break;
 		}
 		$options['shorten']    = (isset($request['shorten']) && $request['shorten'] == 'on') ? true : false;
-		$options['tinyurl']    = array($tinyurl);
-		$options['bitly']      = array(
-			$bitly ,
-			$request['bitly_name'] ,
-			$request['bitly_api'] ,
-			);
+		$options['tinyurl']    = array($tinyurl, TWEET_TINYURL_URL);
+		$options['bitly']      = array($bitly, $request['bitly_name'], $request['bitly_api']);
+		$options['jmp']        = array($jmp, $request['jmp_name'], $request['jmp_api']);
+		$options['isgd']       = array($isgd, TWEET_ISGD_URL);
 		$options['other_tinyurl'] = array(
 			$other ,
 			$request['other_tinyurl_url'] ,
@@ -1098,14 +1123,18 @@ class SimpleTweetController {
 		$out .= "</td>";
 		$out .= "</tr>\n";
 
-		$shortlink = $tinyurl = $bitly = $other = false;
+		$shortlink = $tinyurl = $bitly = $jmp = $isgd = $other = false;
 		if ($options['tinyurl'][0] === true) {
 			$tinyurl = true;
 		} elseif ($options['bitly'][0] === true) {
 			$bitly = true;
+		} elseif ($options['jmp'][0] === true) {
+			$jmp = true;
+		} elseif ($options['isgd'][0] === true) {
+			$isgd = true;
 		} elseif ($options['other_tinyurl'][0] === true) {
 			$other = true;
-		} elseif (!function_exists('get_shortlink')) {
+		} elseif (!(function_exists('get_shortlink') || function_exists('wpme_get_shortlink'))) {
 			$tinyurl = true;
 		} else {
 			$shortlink = true;
@@ -1116,19 +1145,13 @@ class SimpleTweetController {
 		$out .= "<input type=\"checkbox\" name=\"shorten\" id=\"shorten\" value=\"on\" ".($options['shorten'] === true ? 'checked="checked" ' : '')."/> ";
 		$out .= __('Compress Permalink', $this->textdomain_name);
 		$out .= "<br />\n";
-		if ( !function_exists('get_shortlink') ) {
-			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"tinyurl\" value=\"tinyurl\" ".($tinyurl ? 'checked="checked " ' : '')."/> ";
-			$out .= '<a href="http://tinyurl.com/" title="TinyURL.com - shorten that long URL into a tiny URL">TinyURL</a>';
-			$out .= "<br />\n";
-		} else {
+		if ( function_exists('get_shortlink') && class_exists('ShortLinkController') ) {
 			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"shortlink\" value=\"shortlink\" ".($shortlink ? 'checked="checked " ' : '')."/> ";
-			$out .= ( class_exists('ShortLinkController')
-				? '<a href="http://wordpress.org/extend/plugins/short-link-maker/" title="WordPress &gt; Short link maker &laquo; WordPress Plugins">Short link maker</a>'
-				: '<a href="http://wordpress.org/extend/plugins/stats/" title="WordPress &gt; WordPress.com Stats &laquo; WordPress Plugins">WordPress.com Stats</a>'
-			  );
+			$out .= '<a href="http://wordpress.org/extend/plugins/short-link-maker/" title="WordPress &gt; Short link maker &laquo; WordPress Plugins">Short link maker</a>';
 			$out .= "<br />\n";
-			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"tinyurl\" value=\"tinyurl\" ".($tinyurl ? 'checked="checked " ' : '')."/> ";
-			$out .= '<a href="http://tinyurl.com/" title="TinyURL.com - shorten that long URL into a tiny URL">TinyURL</a>';
+		} elseif ( function_exists('wpme_get_shortlink') ) {
+			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"shortlink\" value=\"shortlink\" ".($shortlink ? 'checked="checked " ' : '')."/> ";
+			$out .= '<a href="http://wordpress.org/extend/plugins/stats/" title="WordPress &gt; WordPress.com Stats &laquo; WordPress Plugins">WordPress.com Stats</a>';
 			$out .= "<br />\n";
 		}
 		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"bitly\" value=\"bitly\" ".($bitly ? 'checked="checked " ' : '')."/> ";
@@ -1136,9 +1159,20 @@ class SimpleTweetController {
 		$out .= __('User Name', $this->textdomain_name)."<input type=\"text\" name=\"bitly_name\" id=\"bitly_name\" size=\"20\" value=\"".htmlspecialchars( $options['bitly'][1] )."\" /> ";
 		$out .= __('bit.ly API Key', $this->textdomain_name)."<input type=\"text\" name=\"bitly_api\" id=\"bitly_api\" size=\"30\" value=\"".htmlspecialchars( $options['bitly'][2] )."\" /> ";
 		$out .= "<br />\n";
+		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"jmp\" value=\"jmp\" ".($jmp ? 'checked="checked " ' : '')."/> ";
+		$out .= '<a href="http://j.mp/" title="j.mp, a simple url shortener">j.mp</a> : ';
+		$out .= __('User Name', $this->textdomain_name)."<input type=\"text\" name=\"jmp_name\" id=\"jmp_name\" size=\"20\" value=\"".htmlspecialchars( $options['jmp'][1] )."\" /> ";
+		$out .= __('j.mp API Key', $this->textdomain_name)."<input type=\"text\" name=\"jmp_api\" id=\"jmp_api\" size=\"30\" value=\"".htmlspecialchars( $options['jmp'][2] )."\" /> ";
+		$out .= "<br />\n";
+		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"tinyurl\" value=\"tinyurl\" ".($tinyurl ? 'checked="checked " ' : '')."/> ";
+		$out .= '<a href="http://tinyurl.com/" title="TinyURL.com - shorten that long URL into a tiny URL">TinyURL</a>';
+		$out .= "<br />\n";
+		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"isgd\" value=\"isgd\" ".($isgd ? 'checked="checked " ' : '')."/> ";
+		$out .= '<a href="http://is.gd/" title="is.gd URL Shortener - The Shortest URLs Around">is.gd</a>';
+		$out .= "<br />\n";
 		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"other\" value=\"other\" ".($other ? 'checked="checked " ' : '')."/> ";
 		$out .= __('Other Service', $this->textdomain_name) . ' : ';
-		$out .= "<input type=\"text\" name=\"other_tinyurl_url\" id=\"other_tinyurl_url\" size=\"100\" value=\"".htmlspecialchars( !function_exists('get_shortlink') && $options['other_tinyurl'][1] === TWEET_TINYURL_URL ? '' : $options['other_tinyurl'][1])."\" /> ";
+		$out .= "<input type=\"text\" name=\"other_tinyurl_url\" id=\"other_tinyurl_url\" size=\"100\" value=\"".htmlspecialchars( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')) && $options['other_tinyurl'][1] === TWEET_TINYURL_URL ? '' : $options['other_tinyurl'][1])."\" /> ";
 		$out .= "</td>";
 		$out .= "</tr>\n";
 

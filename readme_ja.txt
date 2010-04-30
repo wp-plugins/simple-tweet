@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJ
 Tags: twitter, posts
 Requires at least: 2.8
 Tested up to: 2.9.1
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 
 WordPress に新規投稿した際、自動的に Twitter に通知するプラグインです。
 
@@ -72,16 +72,6 @@ Simple Tweet の Ver.1.3.0 以降は Twitter の OAuth 認証に対応しまし�
 OAuth の設定を削除したい場合は、「Oauth Reset」のチェックボックスにチェックして設定を更新してください。
 
 
-== Frequently Asked Questions ==
-
-None.
-
-
-== Upgrade Notice ==
-
-None.
-
-
 == Screenshots == 
 
 1. Simple Tweet Settings
@@ -95,7 +85,10 @@ None.
 
 == Changelog == 
 
-**1.3.0 - 2010年2月15日**  
+**1.3.2 - 2010年4月30日**  
+短縮URLサービス j.mp と is.gd に対応
+
+**1.3.1 - 2010年2月15日**  
 細かな不具合の修正
 
 **1.3.0 - 2010年2月10日**  
