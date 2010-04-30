@@ -1347,6 +1347,6 @@ add_action('publish_phone', array(&$simple_tweet, 'publish_post'));
 
 // add content
 add_filter('the_content', array (&$simple_tweet, 'add_content'));
-add_filter('the_content', array (&$simple_tweet, 'content_tweet'));
+//add_filter('the_content', array (&$simple_tweet, 'content_tweet'));
 
 ?>
