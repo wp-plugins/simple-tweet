@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJ
 Tags: twitter, posts, OAuth, shortlink
 Requires at least: 2.8
 Tested up to: 2.9.1
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 
 This is a plugin creating a new tweet including a URL of new post on your wordpress.
 
@@ -86,6 +86,9 @@ Released under the [GPL license](http://www.gnu.org/copyleft/gpl.html).
 
 
 == Changelog == 
+
+**1.3.3 - May 1, 2010**  
+Minor bug fixes.
 
 **1.3.2 - April 30, 2010**  
 Added support to j.mp and is.gd.

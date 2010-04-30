@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.2
+Version: 1.3.3
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -96,7 +96,7 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
  *************************************************************************************/
 class SimpleTweetController {
 	var $twitter_client_name = 'SimpleTweetWP';
-	var $twitter_client_version = '1.3.2';
+	var $twitter_client_version = '1.3.3';
 	var $twitter_client_url = 'http://wordpress.org/extend/plugins/simple-tweet/';
 
 	var $options;
@@ -904,12 +904,10 @@ class SimpleTweetController {
 	}
 
 	function user_profile_update( $user_id ) {
-		if ( isset($_POST['twitter_usr']) ) {
-			list($options, $current_user_options) = $this->_get_options( $user_id );
-			$current_user_options = $this->_init_options( $current_user_options );
-			$current_user_options = $this->_get_post_data( $_POST, $current_user_options );
-			update_usermeta( $user_id, $this->option_name, $current_user_options );
-		}
+		list($options, $current_user_options) = $this->_get_options( $user_id );
+		$current_user_options = $this->_init_options( $current_user_options );
+		$current_user_options = $this->_get_post_data( $_POST, $current_user_options );
+		update_usermeta( $user_id, $this->option_name, $current_user_options );
 	}
 
 	function _get_post_data( $request, $options = NULL, $is_admin = FALSE ) {
