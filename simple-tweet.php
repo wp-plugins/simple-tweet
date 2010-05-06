@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.3
+Version: 1.3.4
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -96,7 +96,7 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
  *************************************************************************************/
 class SimpleTweetController {
 	var $twitter_client_name = 'SimpleTweetWP';
-	var $twitter_client_version = '1.3.3';
+	var $twitter_client_version = '1.3.4';
 	var $twitter_client_url = 'http://wordpress.org/extend/plugins/simple-tweet/';
 
 	var $options;
@@ -895,19 +895,23 @@ class SimpleTweetController {
 	}
 
 	function user_profile( $profileuser ){
-		list($options, $current_user_options) = $this->_get_options( $profileuser->ID );
-		$current_user_options = $this->_init_options( $current_user_options );
-		if ( count($current_user_options) > 0 ) {
-			echo "<h3>".__('Simple Tweet Options', $this->textdomain_name)."</h3>\n\n";
-			echo $this->_options_table( $current_user_options );
+		if ( current_user_can('publish_posts') ) {
+			list($options, $current_user_options) = $this->_get_options( $profileuser->ID );
+			$current_user_options = $this->_init_options( $current_user_options );
+			if ( count($current_user_options) > 0 ) {
+				echo "<h3>".__('Simple Tweet Options', $this->textdomain_name)."</h3>\n\n";
+				echo $this->_options_table( $current_user_options );
+			}
 		}
 	}
 
 	function user_profile_update( $user_id ) {
-		list($options, $current_user_options) = $this->_get_options( $user_id );
-		$current_user_options = $this->_init_options( $current_user_options );
-		$current_user_options = $this->_get_post_data( $_POST, $current_user_options );
-		update_usermeta( $user_id, $this->option_name, $current_user_options );
+		if ( current_user_can('publish_posts') ) {
+			list($options, $current_user_options) = $this->_get_options( $user_id );
+			$current_user_options = $this->_init_options( $current_user_options );
+			$current_user_options = $this->_get_post_data( $_POST, $current_user_options );
+			update_usermeta( $user_id, $this->option_name, $current_user_options );
+		}
 	}
 
 	function _get_post_data( $request, $options = NULL, $is_admin = FALSE ) {
@@ -925,7 +929,7 @@ class SimpleTweetController {
 		$access_token = $options['access_token'];
 		$access_token_secret = $options['access_token_secret'];
 		if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->request_token) && !is_null($this->request_token_secret) ) {
-			$twitter_pin = $access_token = $access_token_secret = null;
+//			$twitter_pin = $access_token = $access_token_secret = null;
 			$twitter_pin = (isset($request['twitter_pin']) && !empty($request['twitter_pin']) ?  trim($request['twitter_pin']) : null); 
 			if ( !is_null($twitter_pin) && $twitter_pin !== $options['pin'] ) {
 				$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret, $this->request_token, $this->request_token_secret);
@@ -938,7 +942,9 @@ class SimpleTweetController {
 				$options['access_token'] = $access_token;
 				$options['access_token_secret'] = $access_token_secret;
 			} else {
-				$twitter_pin = $options['pin'];
+				$twitter_pin  = $options['pin'];
+				$access_token = $options['access_token'];
+				$access_token_secret = $options['access_token_secret'];
 			}
 			$this->request_token = $this->request_token_secret = null;
 		}
