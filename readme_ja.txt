@@ -21,6 +21,8 @@ WordPress に新規投稿した際、自動的に Twitter に通知するプラ�
 
 * English (en) - [odyssey](http://www.odysseygate.com/ "Odysseygate.com")
 * Japanese (ja) - [wokamoto](http://dogmap.jp/ "wokamoto") (plugin author)
+* Belorussian (be_BY) - [Patricia](http://pc.de/ "PC.DE")
+* Dutch (nl_NL) - [Rene](http://wpwebshop.com/blog "WPWebshop Blog")
 
 == Installation ==
 
