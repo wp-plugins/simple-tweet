@@ -21,6 +21,8 @@ And You can also tweet short URL of your domain if you introduce the plugin **[S
 
 * English (en) - [odyssey](http://www.odysseygate.com/ "Odysseygate.com")
 * Japanese (ja) - [wokamoto](http://dogmap.jp/ "wokamoto") (plugin author)
+* Belorussian (be_BY) - [Patricia](http://pc.de/ "PC.DE")
+* Dutch (nl_NL) - [Rene](http://wpwebshop.com/blog "WPWebshop Blog")
 
 If you have translated into your language, please let me know.
 
