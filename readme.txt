@@ -23,6 +23,7 @@ And You can also tweet short URL of your domain if you introduce the plugin **[S
 * Japanese (ja) - [wokamoto](http://dogmap.jp/ "wokamoto") (plugin author)
 * Belorussian (be_BY) - [Patricia](http://pc.de/ "PC.DE")
 * Dutch (nl_NL) - [Rene](http://wpwebshop.com/blog "WPWebshop Blog")
+* German (de_DE) - [Rian Klijn](http://www.creditriskmanager.com/ "Credit Risk Manager")
 
 If you have translated into your language, please let me know.
 
