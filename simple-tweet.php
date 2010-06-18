@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.4
+Version: 1.3.5
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -79,7 +79,9 @@ if ( version_compare(phpversion(), "5.0.0", ">=") && function_exists('curl_init'
  *************************************************************************************/
 function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
 	global $simple_tweet;
-	if ( !isset($simple_tweet) ) $simple_tweet = new SimpleTweetController();
+
+	if ( !isset($simple_tweet) )
+		$simple_tweet = new SimpleTweet();
 
 	$tweet_this = $simple_tweet->TweetThisLink($inreply_to);
 	if ( $tweet_this === FALSE )
@@ -94,9 +96,9 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
 /**************************************************************************************
  * SimpleTweetController Class
  *************************************************************************************/
-class SimpleTweetController {
+class SimpleTweet {
 	var $twitter_client_name = 'SimpleTweetWP';
-	var $twitter_client_version = '1.3.4';
+	var $twitter_client_version = '1.3.5';
 	var $twitter_client_url = 'http://wordpress.org/extend/plugins/simple-tweet/';
 
 	var $options;
@@ -1259,7 +1261,7 @@ class SimpleTweetController {
 		$post_excerpt = (!empty($post->post_excerpt) ? $post->post_excerpt : $post->post_content);
 		list($options, $current_user_options) = $this->_get_options( $post->post_author );
 
-		$status_id = $this->_get_post_meta($post_id, TWEET_METAKEY_SID);
+		$status_id = (string) $this->_get_post_meta($post_id, TWEET_METAKEY_SID);
 		if ( $inreply_to && empty($status_id) )
 			return false;
 
@@ -1323,7 +1325,7 @@ class SimpleTweetController {
 /******************************************************************************
  * Go Go Go!
  *****************************************************************************/
-$simple_tweet = new SimpleTweetController();
+$simple_tweet = new SimpleTweet();
 
 // add admin dashbord
 if (is_admin()) {
