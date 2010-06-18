@@ -280,7 +280,7 @@ class SimpleTweet {
 
 	// Get post_meta
 	function _get_post_meta($post_id, $key) {
-		return maybe_unserialize(get_post_meta($post_id, $key, true));
+		return maybe_unserialize((string) get_post_meta($post_id, $key, true));
 	}
 
 	function _get_post_revisions_meta( $post_id, $key, $type = 'revision' ) {
@@ -499,7 +499,7 @@ class SimpleTweet {
 		list($this->options, $this->current_user_options) = $this->_get_options( $post->post_author );
 
 		$post_time = strtotime($post->post_date_gmt . ' +0000');
-		$meta_val  = $this->_get_post_meta( $post_id, TWEET_METAKEY_SID );
+		$meta_val  = (string) $this->_get_post_meta( $post_id, TWEET_METAKEY_SID );
 		$meta_vals = $this->_get_post_revisions_meta( $post_id, TWEET_METAKEY_SID );
 		$meta_vals = array_merge( (array) $meta_vals, (array) $meta_val );
 		if ( count($meta_vals) > 0 ) {
