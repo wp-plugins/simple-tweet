@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.5.1
+Version: 1.3.5.2
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -57,6 +57,7 @@ define('TWEET_JMP_APIKEY', '');
 define('TWEET_ISGD_URL', 'http://is.gd/api.php?longurl=');
 
 define('TWEET_METAKEY_SID', 'twitter_id');
+define('TWEET_METAKEY_RES', '_twet_result');
 define('TWEET_METAKEY_URL', '_tiny_url');
 
 
@@ -98,7 +99,7 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
  *************************************************************************************/
 class SimpleTweet {
 	var $twitter_client_name = 'SimpleTweetWP';
-	var $twitter_client_version = '1.3.5';
+	var $twitter_client_version = '1.3.5.2';
 	var $twitter_client_url = 'http://wordpress.org/extend/plugins/simple-tweet/';
 
 	var $options;
@@ -146,6 +147,7 @@ class SimpleTweet {
 	var $admin_option, $admin_action, $admin_hook;
 	var $charset;
 	var $note, $error;
+	var $tweet_msg;
 	var $_log;
 
 	//*****************************************************************************
@@ -169,6 +171,8 @@ class SimpleTweet {
 		$this->consumer_secret = $this->options['consumer_secret'];
 		$this->request_token   = $this->options['request_token'];
 		$this->request_token_secret = $this->options['request_token_secret'];
+
+		$this->tweet_msg = '';
 	}
 
 	//*****************************************************************************
@@ -315,7 +319,7 @@ class SimpleTweet {
 	// Add or Update post_meta
 	function _update_post_meta($post_id, $key, $val) {
 		if (is_array($val))
-			$key = maybe_serialize($val);
+			$val = maybe_serialize($val);
 		return (
 			add_post_meta($post_id, $key, $val, true) or
 			update_post_meta($post_id, $key, $val)
@@ -423,8 +427,9 @@ class SimpleTweet {
 		if ( isset($post) ) {
 			$post_time = strtotime($post->post_date_gmt . ' +0000');
 			if ( $post_time >= $this->options['activate'] ) {
-				$status_id = $this->_get_post_meta($post->ID, TWEET_METAKEY_SID);
-				if ( empty($status_id) ) {
+				$status_id = (string) $this->_get_post_meta($post->ID, TWEET_METAKEY_SID);
+				$tweet_res = (string) $this->_get_post_meta($post->ID, TWEET_METAKEY_RES);
+				if ( empty($status_id) && empty($tweet_res) ) {
 					$this->_do_tweet( $post->ID );
 				}
 			}
@@ -524,23 +529,21 @@ class SimpleTweet {
 			$post_excerpt = (!empty($post->post_excerpt) ? $post->post_excerpt : $post->post_content);
 
 			$url = get_permalink($post_id);
-			$tiny = $this->_get_post_meta($post_id, TWEET_METAKEY_URL);
-			$tiny_url = ( is_array($tiny) && $tiny['limit'] > time()
-				? $tiny['tiny_url']
-				: '' );
-			if ( empty($tiny_url) ) {
-				$tiny_url = $this->_get_shortlink($url, $post_id, $this->options );
-				if ( !empty($tiny_url) )
-					$this->_update_post_meta(
-						$post_id ,
-						TWEET_METAKEY_URL,
-						array(
-							'url' => $url ,
-							'limit' => time() + TWEET_TINYURL_LIMIT ,
-							'tiny_url' => $tiny_url
-							)
-						);
-			}
+//			$tiny = $this->_get_post_meta($post_id, TWEET_METAKEY_URL);
+//			$tiny_url = ( is_array($tiny) && $tiny['limit'] > time()
+//				? $tiny['tiny_url']
+//				: '' );
+			$tiny_url = $this->_get_shortlink($url, $post_id, $this->options );
+			if ( !empty($tiny_url) )
+				$this->_update_post_meta(
+					$post_id ,
+					TWEET_METAKEY_URL,
+					array(
+						'url' => $url ,
+						'limit' => time() + TWEET_TINYURL_LIMIT ,
+						'tiny_url' => $tiny_url
+						)
+					);
 			$permalink = ( $this->options['shorten'] || mb_strlen($msg . $this->options['separator'] . $url) > TWEET_MAX
 				? ( !empty($tiny_url) ? $tiny_url : $url )
 				: $url );
@@ -562,21 +565,27 @@ class SimpleTweet {
 				$tweet_msg = mb_substr($msg, 0, TWEET_MAX - (mb_strlen($permalink, $this->charset) + 3), $this->charset) . '...' . $permalink;
 			$this->_log .= "tweet message:{$tweet_msg}\n";
 
-			$tweet_result = FALSE;
-			if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->options['access_token']) && !is_null($this->options['access_token_secret']) )
-				$tweet_result = $this->_post_twitter_OAuth($tweet_msg, $this->options['access_token'], $this->options['access_token_secret']);
-			if ( $tweet_result === FALSE )
-				$tweet_result = $this->_post_twitter($tweet_msg, $this->options['user'], $this->options['password']);
+			if ($this->tweet_msg != $tweet_msg) {
+				$this->tweet_msg = $tweet_msg;
 
-			if ( $tweet_result !== FALSE ) {
-				$tweet_id = $this->_get_tweet_id($tweet_result);
-				$this->_log .= "id:{$tweet_id}\n";
-				if ( $this->_update_post_meta($post_id, TWEET_METAKEY_SID, $tweet_id) )
-					$this->_log = "*** OK! ***\n\n" . $this->_log;
-				else
-					$this->_log = "** ERROR **\n\n" . $this->_log;
-			} else {
-				$this->_log = "** ERROR **\n\n" . $tweet_result . "\n" . $this->_log;
+				$tweet_result = FALSE;
+				if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->options['access_token']) && !is_null($this->options['access_token_secret']) )
+					$tweet_result = $this->_post_twitter_OAuth($tweet_msg, $this->options['access_token'], $this->options['access_token_secret']);
+				if ( $tweet_result === FALSE )
+					$tweet_result = $this->_post_twitter($tweet_msg, $this->options['user'], $this->options['password']);
+
+				if ( $tweet_result !== FALSE ) {
+					$tweet_id = $this->_get_tweet_id($tweet_result);
+					$this->_log .= "id:{$tweet_id}\n";
+					if ( $this->_update_post_meta($post_id, TWEET_METAKEY_SID, $tweet_id) )
+						$this->_log = "*** OK! ***\n\n" . $this->_log;
+					else
+						$this->_log = "** ERROR **\n\n" . $this->_log;
+				} else {
+					$this->_log = "** ERROR **\n\n" . $tweet_result . "\n" . $this->_log;
+				}
+
+				$this->_update_post_meta($post_id, TWEET_METAKEY_RES, $tweet_result);
 			}
 		}
 
@@ -800,11 +809,16 @@ class SimpleTweet {
 		if (empty($result)) return '';
 
 		$tweet_id = '';
-		if ( function_exists('simplexml_load_string') ) {
-			$xml = simplexml_load_string($result);
-			$tweet_id = $xml->id;
-			unset($xml);
-		} elseif ( preg_match_all('/<id>([0-9]+)<\/id>/i', $result, $matches, PREG_PATTERN_ORDER) ) {
+//		if ( function_exists('simplexml_load_string') ) {
+//			$xml = simplexml_load_string($result);
+//			$tweet_id = $xml->id;
+//			unset($xml);
+//		} elseif ( preg_match_all('/<id>([0-9]+)<\/id>/i', $result, $matches, PREG_PATTERN_ORDER) ) {
+//			$tweet_id = $matches[1][0];
+//			unset($matches);
+//		}
+
+		if ( preg_match_all('/<id>([0-9]+)<\/id>/i', $result, $matches, PREG_PATTERN_ORDER) ) {
 			$tweet_id = $matches[1][0];
 			unset($matches);
 		}
@@ -1241,8 +1255,9 @@ class SimpleTweet {
 		global $wpdb;
 
 		$wpdb->query($wpdb->prepare(
-			"DELETE FROM $wpdb->postmeta WHERE meta_key in (%s, %s)" ,
+			"DELETE FROM $wpdb->postmeta WHERE meta_key in (%s, %s, %s)" ,
 			$wpdb->escape(TWEET_METAKEY_SID) ,
+			$wpdb->escape(TWEET_METAKEY_RES) ,
 			$wpdb->escape(TWEET_METAKEY_URL)
 			)
 		);
