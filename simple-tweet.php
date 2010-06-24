@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.5
+Version: 1.3.5.1
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -280,20 +280,19 @@ class SimpleTweet {
 
 	// Get post_meta
 	function _get_post_meta($post_id, $key) {
-		return maybe_unserialize((string) get_post_meta($post_id, $key, true));
+		return maybe_unserialize(get_post_meta($post_id, $key, true));
 	}
 
 	function _get_post_revisions_meta( $post_id, $key, $type = 'revision' ) {
 		if ( !$post = get_post( $post_id ) )
-			return NULL;
+			return array();
 
 		$revisions = array();
 		switch ( $type ) {
 		case 'autosave' :
 			if ( function_exists('wp_get_post_autosave') ) {
-				if ( !$autosave = wp_get_post_autosave( $post->ID ) )
-					return NULL;
-				$revisions = array( $autosave );
+				if ( $autosave = wp_get_post_autosave( $post->ID ) )
+					$revisions = array( $autosave );
 			}
 			break;
 		case 'revision' : // just revisions - remove autosave later
@@ -301,7 +300,7 @@ class SimpleTweet {
 		default :
 			if ( function_exists('wp_get_post_revisions') ) {
 				if ( !$revisions = wp_get_post_revisions( $post->ID ) )
-					return NULL;
+					$revisions = array();
 			}
 			break;
 		}
@@ -315,7 +314,8 @@ class SimpleTweet {
 
 	// Add or Update post_meta
 	function _update_post_meta($post_id, $key, $val) {
-		if (is_array($key)) $key = maybe_serialize($key);
+		if (is_array($val))
+			$key = maybe_serialize($val);
 		return (
 			add_post_meta($post_id, $key, $val, true) or
 			update_post_meta($post_id, $key, $val)
@@ -499,9 +499,10 @@ class SimpleTweet {
 		list($this->options, $this->current_user_options) = $this->_get_options( $post->post_author );
 
 		$post_time = strtotime($post->post_date_gmt . ' +0000');
-		$meta_val  = (string) $this->_get_post_meta( $post_id, TWEET_METAKEY_SID );
+		$meta_val  = $this->_get_post_meta( $post_id, TWEET_METAKEY_SID );
 		$meta_vals = $this->_get_post_revisions_meta( $post_id, TWEET_METAKEY_SID );
-		$meta_vals = array_merge( (array) $meta_vals, (array) $meta_val );
+		if ( !empty($meta_val) )
+			$meta_vals = array_merge( $meta_vals, (array) $meta_val );
 		if ( count($meta_vals) > 0 ) {
 			rsort($meta_vals);
 			$meta_val = $meta_vals[0];
@@ -703,7 +704,7 @@ class SimpleTweet {
 	// Check URL
 	//*****************************************************************************
 	function _chk_url( $url ) {
-		return ( preg_match("/s?https?:\/\/[-_.!~*'\(\)a-zA-Z0-9;\/?:\@&=+\$,%#]+/i", $url) !== FALSE );
+		return ( preg_match("/^s?https?:\/\/[-_.!~*'\(\)a-zA-Z0-9;\/?:\@&=+\$,%#]+$/i", $url) > 0 );
 	}
 
 	//*****************************************************************************
@@ -932,7 +933,9 @@ class SimpleTweet {
 		$access_token_secret = $options['access_token_secret'];
 		if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->request_token) && !is_null($this->request_token_secret) ) {
 //			$twitter_pin = $access_token = $access_token_secret = null;
-			$twitter_pin = (isset($request['twitter_pin']) && !empty($request['twitter_pin']) ?  trim($request['twitter_pin']) : null); 
+			$twitter_pin = (isset($request['twitter_pin']) && !empty($request['twitter_pin'])
+				? trim($request['twitter_pin'])
+				: null); 
 			if ( !is_null($twitter_pin) && $twitter_pin !== $options['pin'] ) {
 				$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret, $this->request_token, $this->request_token_secret);
 				$token = $oauth->getAccessToken(null, $twitter_pin);
@@ -1262,8 +1265,8 @@ class SimpleTweet {
 		list($options, $current_user_options) = $this->_get_options( $post->post_author );
 
 		$status_id = (string) $this->_get_post_meta($post_id, TWEET_METAKEY_SID);
-		if ( $inreply_to && empty($status_id) )
-			return false;
+//		if ( $inreply_to && empty($status_id) )
+//			return false;
 
 		if ( $options['shorten'] ) {
 			$tiny = $this->_get_post_meta($post_id, TWEET_METAKEY_URL);
@@ -1284,6 +1287,8 @@ class SimpleTweet {
 					? $tiny['tiny_url']
 					: '' );
 			}
+			if ( empty($tiny_url) || !$this->_chk_url($tiny_url) )
+				$tiny_url = '';
 			if ( empty($tiny_url) ) {
 				$permalink = get_permalink($post_id);
 				if ( is_single() ) {
@@ -1292,8 +1297,8 @@ class SimpleTweet {
 						$post_id ,
 						TWEET_METAKEY_URL,
 						array(
-							'url' => get_permalink($post_id) ,
-							'limit' => time() + TWEET_TINYURL_LIMIT ,
+							'url'      => get_permalink($post_id) ,
+							'limit'    => time() + TWEET_TINYURL_LIMIT ,
 							'tiny_url' => $tiny_url
 							)
 						);
@@ -1312,7 +1317,7 @@ class SimpleTweet {
 		$tweet_this_link = '<a href="' . TWEET_HOME_URL .
 			'?status=' . urlencode($link) .
 			( !empty($status_id) ? '&amp;in_reply_to_status_id=' . $status_id : '' ) .
-			'&amp;in_reply_to=' . $options['user'] .
+			( $inreply_to && !empty($options['user']) ? '&amp;in_reply_to=' . $options['user'] : '' ).
 			'" class="tweet-this" >' .
 			$text .
 			'</a>';

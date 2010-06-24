@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJ
 Tags: twitter, posts
 Requires at least: 2.8
 Tested up to: 3.0
-Stable tag: 1.3.5
+Stable tag: 1.3.5.1
 
 WordPress に新規投稿した際、自動的に Twitter に通知するプラグインです。
 
