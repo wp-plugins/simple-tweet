@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.5.2
+Version: 1.3.6
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -41,24 +41,41 @@ Includes:
 /**************************************************************************************
  * Define
  *************************************************************************************/
-define('TWEET_MAX', 140);
-define('TWEET_TIMEOUT', 30);
-define('TWEET_HOME_URL', 'http://twitter.com/' );
-define('TWEET_SENT_URL', 'http://twitter.com/statuses/update.xml');
-define('TWEET_OAUTH_CLIENTS_URL', 'http://twitter.com/oauth_clients');
-define('TWEET_TINYURL_LIMIT', 60 * 60 * 24 * 30 * 6);
-define('TWEET_TINYURL_URL', 'http://tinyurl.com/api-create.php?url=');
-define('TWEET_BITLY_URL', 'http://api.bit.ly/shorten?version=2.0.1&login=%s&apiKey=%s&longUrl=');
-define('TWEET_BITLY_USER', 'bitlyapidemo');
-define('TWEET_BITLY_APIKEY', 'R_0da49e0a9118ff35f52f629d2d71bf07');
-define('TWEET_JMP_URL', 'http://api.j.mp/shorten?version=2.0.1&&login=%s&apiKey=%s&longUrl=');
-define('TWEET_JMP_USER', '');
-define('TWEET_JMP_APIKEY', '');
-define('TWEET_ISGD_URL', 'http://is.gd/api.php?longurl=');
+if (!defined('TWEET_MAX'))
+	define('TWEET_MAX', 140);
+if (!defined('TWEET_TIMEOUT'))
+	define('TWEET_TIMEOUT', 30);
+if (!defined('TWEET_HOME_URL'))
+	define('TWEET_HOME_URL', 'http://twitter.com/' );
+if (!defined('TWEET_SENT_URL'))
+	define('TWEET_SENT_URL', 'http://twitter.com/statuses/update.xml');
+if (!defined('TWEET_OAUTH_CLIENTS_URL'))
+	define('TWEET_OAUTH_CLIENTS_URL', 'http://twitter.com/oauth_clients');
+if (!defined('TWEET_TINYURL_LIMIT'))
+	define('TWEET_TINYURL_LIMIT', 60 * 60 * 24 * 30 * 6);
+if (!defined('TWEET_TINYURL_URL'))
+	define('TWEET_TINYURL_URL', 'http://tinyurl.com/api-create.php?url=');
+if (!defined('TWEET_BITLY_URL'))
+	define('TWEET_BITLY_URL', 'http://api.bit.ly/shorten?version=2.0.1&login=%s&apiKey=%s&longUrl=');
+if (!defined('TWEET_BITLY_USER'))
+	define('TWEET_BITLY_USER', '');
+if (!defined('TWEET_BITLY_APIKEY'))
+	define('TWEET_BITLY_APIKEY', '');
+if (!defined('TWEET_JMP_URL'))
+	define('TWEET_JMP_URL', 'http://api.j.mp/shorten?version=2.0.1&&login=%s&apiKey=%s&longUrl=');
+if (!defined('TWEET_JMP_USER'))
+	define('TWEET_JMP_USER', '');
+if (!defined('TWEET_JMP_APIKEY'))
+	define('TWEET_JMP_APIKEY', '');
+if (!defined('TWEET_ISGD_URL'))
+	define('TWEET_ISGD_URL', 'http://is.gd/api.php?longurl=');
 
-define('TWEET_METAKEY_SID', 'twitter_id');
-define('TWEET_METAKEY_RES', '_twet_result');
-define('TWEET_METAKEY_URL', '_tiny_url');
+if (!defined('TWEET_METAKEY_SID'))
+	define('TWEET_METAKEY_SID', 'twitter_id');
+if (!defined('TWEET_METAKEY_RES'))
+	define('TWEET_METAKEY_RES', '_twet_result');
+if (!defined('TWEET_METAKEY_URL'))
+	define('TWEET_METAKEY_URL', '_tiny_url');
 
 
 /**************************************************************************************
@@ -99,7 +116,7 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
  *************************************************************************************/
 class SimpleTweet {
 	var $twitter_client_name = 'SimpleTweetWP';
-	var $twitter_client_version = '1.3.5.2';
+	var $twitter_client_version = '1.3.6';
 	var $twitter_client_url = 'http://wordpress.org/extend/plugins/simple-tweet/';
 
 	var $options;
@@ -773,19 +790,26 @@ class SimpleTweet {
 		$result = '';
 		$get_url .= $url;
 
-		if ( !class_exists('Snoopy') && file_exists(ABSPATH . WPINC . '/class-snoopy.php') )
-			require_once(ABSPATH . WPINC . '/class-snoopy.php');
+		if ( function_exists('wp_remote_get') ) {
+			$ret = wp_remote_get($get_url);
+			if (is_array($ret) && isset($ret["body"]) && !empty($ret["body"]))
+				$result = $ret["body"];
 
-		if ( class_exists('Snoopy') ) {
-			$snoop = new Snoopy;
-			$snoop->read_timeout = TWEET_TIMEOUT;
-			$snoop->timed_out = true;
-			$snoop->fetch($get_url);
-			$result = ( strpos($snoop->response_code, '200') !== FALSE
-				? $snoop->results
-				: ''
-				);
-			unset($snoop);
+		} else {
+			if ( !class_exists('Snoopy') && file_exists(ABSPATH . WPINC . '/class-snoopy.php') )
+				require_once(ABSPATH . WPINC . '/class-snoopy.php');
+
+			if ( class_exists('Snoopy') ) {
+				$snoop = new Snoopy;
+				$snoop->read_timeout = TWEET_TIMEOUT;
+				$snoop->timed_out = true;
+				$snoop->fetch($get_url);
+				$result = ( strpos($snoop->response_code, '200') !== FALSE
+					? $snoop->results
+					: ''
+					);
+				unset($snoop);
+			}
 		}
 
 		if ( empty($result) ) {
@@ -799,7 +823,7 @@ class SimpleTweet {
 			}
 		}
 
-		return ($this->_chk_url($result) ? $result : $url);
+		return $result;
 	}
 
 	//*****************************************************************************
@@ -1168,7 +1192,7 @@ class SimpleTweet {
 		$out .= "<input type=\"checkbox\" name=\"shorten\" id=\"shorten\" value=\"on\" ".($options['shorten'] === true ? 'checked="checked" ' : '')."/> ";
 		$out .= __('Compress Permalink', $this->textdomain_name);
 		$out .= "<br />\n";
-		if ( function_exists('get_shortlink') && class_exists('ShortLinkController') ) {
+		if ( function_exists('get_shortlink') && class_exists('ShortLinkMaker') ) {
 			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"shortlink\" value=\"shortlink\" ".($shortlink ? 'checked="checked " ' : '')."/> ";
 			$out .= '<a href="http://wordpress.org/extend/plugins/short-link-maker/" title="WordPress &gt; Short link maker &laquo; WordPress Plugins">Short link maker</a>';
 			$out .= "<br />\n";
