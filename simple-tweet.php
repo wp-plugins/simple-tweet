@@ -370,7 +370,7 @@ class SimpleTweet {
 	}
 
 	// Add Option Page
-	function _add_option_page($page_title, $function, $capability = 9, $menu_title = '', $file = '') {
+	function _add_option_page($page_title, $function, $capability = 'administrator', $menu_title = '', $file = '') {
 		if ($menu_title == '') $menu_title = $page_title;
 		if ($file == '') $file = $this->plugin_file;
 
