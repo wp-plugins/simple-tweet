@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.6
+Version: 1.3.7
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -39,46 +39,6 @@ Includes:
 */
 
 /**************************************************************************************
- * Define
- *************************************************************************************/
-if (!defined('TWEET_MAX'))
-	define('TWEET_MAX', 140);
-if (!defined('TWEET_TIMEOUT'))
-	define('TWEET_TIMEOUT', 30);
-if (!defined('TWEET_HOME_URL'))
-	define('TWEET_HOME_URL', 'http://twitter.com/' );
-if (!defined('TWEET_SENT_URL'))
-	define('TWEET_SENT_URL', 'http://twitter.com/statuses/update.xml');
-if (!defined('TWEET_OAUTH_CLIENTS_URL'))
-	define('TWEET_OAUTH_CLIENTS_URL', 'http://twitter.com/oauth_clients');
-if (!defined('TWEET_TINYURL_LIMIT'))
-	define('TWEET_TINYURL_LIMIT', 60 * 60 * 24 * 30 * 6);
-if (!defined('TWEET_TINYURL_URL'))
-	define('TWEET_TINYURL_URL', 'http://tinyurl.com/api-create.php?url=');
-if (!defined('TWEET_BITLY_URL'))
-	define('TWEET_BITLY_URL', 'http://api.bit.ly/shorten?version=2.0.1&login=%s&apiKey=%s&longUrl=');
-if (!defined('TWEET_BITLY_USER'))
-	define('TWEET_BITLY_USER', '');
-if (!defined('TWEET_BITLY_APIKEY'))
-	define('TWEET_BITLY_APIKEY', '');
-if (!defined('TWEET_JMP_URL'))
-	define('TWEET_JMP_URL', 'http://api.j.mp/shorten?version=2.0.1&&login=%s&apiKey=%s&longUrl=');
-if (!defined('TWEET_JMP_USER'))
-	define('TWEET_JMP_USER', '');
-if (!defined('TWEET_JMP_APIKEY'))
-	define('TWEET_JMP_APIKEY', '');
-if (!defined('TWEET_ISGD_URL'))
-	define('TWEET_ISGD_URL', 'http://is.gd/api.php?longurl=');
-
-if (!defined('TWEET_METAKEY_SID'))
-	define('TWEET_METAKEY_SID', 'twitter_id');
-if (!defined('TWEET_METAKEY_RES'))
-	define('TWEET_METAKEY_RES', '_twet_result');
-if (!defined('TWEET_METAKEY_URL'))
-	define('TWEET_METAKEY_URL', '_tiny_url');
-
-
-/**************************************************************************************
  * Global
  *************************************************************************************/
 global $simple_tweet;
@@ -101,7 +61,7 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
 	if ( !isset($simple_tweet) )
 		$simple_tweet = new SimpleTweet();
 
-	$tweet_this = $simple_tweet->TweetThisLink($inreply_to);
+	$tweet_this = $simple_tweet->tweet_this_link($inreply_to);
 	if ( $tweet_this === FALSE )
 		return;
 
@@ -115,24 +75,45 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
  * SimpleTweetController Class
  *************************************************************************************/
 class SimpleTweet {
-	var $twitter_client_name = 'SimpleTweetWP';
-	var $twitter_client_version = '1.3.6';
-	var $twitter_client_url = 'http://wordpress.org/extend/plugins/simple-tweet/';
+	public $twitter_client_name = 'SimpleTweetWP';
+	public $twitter_client_version = '1.3.7';
+	public $twitter_client_url = 'http://wordpress.org/extend/plugins/simple-tweet/';
 
-	var $options;
-	var $current_user_options;
+	// Constant
+	const TWEET_MAX = 140;
+	const TWEET_TIMEOUT = 30;
+	const TWEET_HOME_URL = 'http://twitter.com/';
+	const TWEET_SENT_URL = 'http://twitter.com/statuses/update.xml';
+	const TWEET_OAUTH_CLIENTS_URL = 'http://twitter.com/oauth_clients';
+	const TWEET_TINYURL_LIMIT = 15552000;	// 60 * 60 * 24 * 30 * 6
+	const TWEET_TINYURL_URL = 'http://tinyurl.com/api-create.php?url=';
+	const TWEET_BITLY_URL = 'http://api.bit.ly/shorten?version=2.0.1&login=%s&apiKey=%s&longUrl=';
+	const TWEET_BITLY_USER = '';
+	const TWEET_BITLY_APIKEY = '';
+	const TWEET_JMP_URL = 'http://api.j.mp/shorten?version=2.0.1&&login=%s&apiKey=%s&longUrl=';
+	const TWEET_JMP_USER = '';
+	const TWEET_JMP_APIKEY = '';
+	const TWEET_ISGD_URL = 'http://is.gd/api.php?longurl=';
+
+	const TWEET_METAKEY_SID = 'twitter_id';
+	const TWEET_METAKEY_RES = '_twet_result';
+	const TWEET_METAKEY_URL = '_tiny_url';
+
+	// Options
+	private $options;
+	private $current_user_options;
 
 	// Deafault Options
-	var $options_default = array(
-		'user' => '' ,
-		'password' => '' ,
+	private $options_default = array(
+//		'user' => '' ,
+//		'password' => '' ,
 		'separator' => ' ' ,
 		'shorten' => TRUE ,
-		'tinyurl' => array(FALSE, TWEET_TINYURL_URL) ,
-		'bitly' => array(FALSE, TWEET_BITLY_USER, TWEET_BITLY_APIKEY) ,
-		'jmp' => array(FALSE, TWEET_JMP_USER, TWEET_JMP_APIKEY) ,
-		'isgd' => array(FALSE, TWEET_ISGD_URL) ,
-		'other_tinyurl' => array(FALSE, TWEET_TINYURL_URL) ,
+		'tinyurl' => array(FALSE, SimpleTweet::TWEET_TINYURL_URL) ,
+		'bitly' => array(FALSE, SimpleTweet::TWEET_BITLY_USER, SimpleTweet::TWEET_BITLY_APIKEY) ,
+		'jmp' => array(FALSE, SimpleTweet::TWEET_JMP_USER, SimpleTweet::TWEET_JMP_APIKEY) ,
+		'isgd' => array(FALSE, SimpleTweet::TWEET_ISGD_URL) ,
+		'other_tinyurl' => array(FALSE, SimpleTweet::TWEET_TINYURL_URL) ,
 		'tweet_text' => '' ,
 		'tweet_without_url' => FALSE ,
 		'add_content' => FALSE ,
@@ -152,28 +133,25 @@ class SimpleTweet {
 		'pin' => null ,
 		);
 
-	var $consumer_key    = null;
-	var $consumer_secret = null;
-	var $request_token   = null;
-	var $request_token_secret = null;
-	var $oauth_token     = null;
+	private $consumer_key    = null;
+	private $consumer_secret = null;
+	private $request_token   = null;
+	private $request_token_secret = null;
+	private $oauth_token     = null;
 
 	// Common Variables
-	var $plugin_dir, $plugin_file, $plugin_url;
-	var $textdomain_name, $option_name;
-	var $admin_option, $admin_action, $admin_hook;
-	var $charset;
-	var $note, $error;
-	var $tweet_msg;
-	var $_log;
+	private $plugin_dir, $plugin_file, $plugin_url;
+	private $textdomain_name, $option_name;
+	private $admin_option, $admin_action, $admin_hook;
+	private $charset;
+	private $note, $error;
+	private $tweet_msg;
+	private $_log;
 
 	//*****************************************************************************
 	// Constructor
 	//*****************************************************************************
-	function SimpleTweetController() {
-		$this->__construct();
-	}
-	function __construct() {
+	public function __construct() {
 		global $user_id;
 
 		$this->_init_variables();
@@ -190,6 +168,30 @@ class SimpleTweet {
 		$this->request_token_secret = $this->options['request_token_secret'];
 
 		$this->tweet_msg = '';
+
+		// add admin dashbord
+		if (is_admin()) {
+			add_action('admin_menu', array(&$this,'admin_menu'));
+			add_filter('plugin_action_links', array(&$this, 'plugin_setting_links'), 10, 2 );
+
+			add_action('show_user_profile', array(&$this,'user_profile'));
+			add_action('edit_user_profile', array(&$this,'user_profile'));
+
+			add_action('personal_options_update', array(&$this,'user_profile_update'));
+			add_action('edit_user_profile_update', array(&$this,'user_profile_update'));
+
+		} else {
+			// add content
+			add_filter('the_content', array (&$this, 'add_content'));
+			//add_filter('the_content', array (&$this, 'content_tweet'));
+		}
+
+		// post publish
+		add_action('publish_post', array(&$this, 'publish_post'));
+		add_action('publish_future_post', array(&$this, 'publish_post'));
+
+		// for ktai-entry
+		add_action('publish_phone', array(&$this, 'publish_post'));
 	}
 
 	//*****************************************************************************
@@ -197,13 +199,13 @@ class SimpleTweet {
 	//*****************************************************************************
 
 	// check wp version
-	function _check_wp_version($version, $operator = ">=") {
+	private function _check_wp_version($version, $operator = ">=") {
 		global $wp_version;
 		return version_compare($wp_version, $version, $operator);
 	}
 
 	// init variables
-	function _init_variables() {
+	private function _init_variables() {
 		$this->charset = get_option('blog_charset');
 		$this->_set_plugin_dir(__FILE__);
 		$this->note = '';
@@ -211,7 +213,7 @@ class SimpleTweet {
 	}
 
 	// set plugin dir
-	function _set_plugin_dir( $file = '' ) {
+	private function _set_plugin_dir( $file = '' ) {
 		$file_path = ( !empty($file) ? $file : __FILE__);
 		$filename = explode("/", $file_path);
 		if(count($filename) <= 1) $filename = explode("\\", $file_path);
@@ -222,7 +224,7 @@ class SimpleTweet {
 	}
 
 	// load textdomain
-	function _load_textdomain( $sub_dir = 'languages' ) {
+	private function _load_textdomain( $sub_dir = 'languages' ) {
 		$this->textdomain_name = 'simple-tweet';
 		$plugins_dir = trailingslashit(defined('PLUGINDIR') ? PLUGINDIR : 'wp-content/plugins');
 		$abs_plugin_dir = $this->_wp_plugin_dir($this->plugin_dir);
@@ -239,19 +241,28 @@ class SimpleTweet {
 	}
 
 	// Get Options
-	function _get_options( $user_id = "" ) {
+	private function _get_options( $user_id = "" ) {
 		$options = get_option( $this->option_name );
 		$user_options = array();
 		if ( !empty($user_id) ) {
-			$user_options = get_usermeta( $user_id, $this->option_name );
-			$options = array_merge( (array) $options, (array) $user_options );
+			$user_options = false;
+			if (function_exists('get_user_meta')) {
+				$user_options = get_user_meta($user_id, $this->option_name, true);
+				if (!is_array($user_options)) {
+					$user_options = get_usermeta($user_id, $this->option_name);
+					update_user_meta($user_id, $this->option_name, $user_options);
+				}
+			} else {
+				$user_options = get_usermeta($user_id, $this->option_name);
+			}
+			$options = array_merge((array) $options, (array) $user_options);
 		}
 
 		return array($options, $user_options);
 	}
 
 	// Set Default Options
-	function _set_default_options($options = '') {
+	private function _set_default_options($options = '') {
 		if (!is_array($options))
 			$options = array();
 
@@ -262,7 +273,7 @@ class SimpleTweet {
 	}
 
 	// Handles Add/strips slashes to the given array
-	function _strip_array($array) {
+	private function _strip_array($array) {
 		if( !is_array($array) )
 			return stripslashes($array);
 
@@ -275,24 +286,29 @@ class SimpleTweet {
 	}
 
 	// Make Nonce field
-	function _make_nonce_field($action = -1, $name = "_wpnonce", $referer = true , $echo = true ) {
-		return ( function_exists('wp_nonce_field')
+	private function _make_nonce_field($action = -1, $name = "_wpnonce", $referer = true , $echo = true ) {
+		return (
+			function_exists('wp_nonce_field')
 			? wp_nonce_field($action, $name, $referer, $echo)
-			: '' );
+			: ''
+			);
 	}
 
 	// Update Options
-	function _update_options() {
+	private function _update_options() {
 		update_option($this->option_name, $this->options);
 	}
 
 	// Delete Options
-	function _delete_options() {
+	private function _delete_options() {
 		delete_option($this->option_name);
 
 		$users_of_blog = get_users_of_blog();
 		foreach ( (array) $users_of_blog as $user ) {
-			delete_usermeta( $user->ID, $this->option_name );
+			if (function_exists('delete_user_meta'))
+				delete_user_meta($user->ID, $this->option_name); 
+			else
+				delete_usermeta($user->ID, $this->option_name);
 		}
 		unset($users_of_blog);
 
@@ -300,11 +316,11 @@ class SimpleTweet {
 	}
 
 	// Get post_meta
-	function _get_post_meta($post_id, $key) {
+	private function _get_post_meta($post_id, $key) {
 		return maybe_unserialize(get_post_meta($post_id, $key, true));
 	}
 
-	function _get_post_revisions_meta( $post_id, $key, $type = 'revision' ) {
+	private function _get_post_revisions_meta( $post_id, $key, $type = 'revision' ) {
 		if ( !$post = get_post( $post_id ) )
 			return array();
 
@@ -334,7 +350,7 @@ class SimpleTweet {
 	}
 
 	// Add or Update post_meta
-	function _update_post_meta($post_id, $key, $val) {
+	private function _update_post_meta($post_id, $key, $val) {
 		if (is_array($val))
 			$val = maybe_serialize($val);
 		return (
@@ -344,7 +360,7 @@ class SimpleTweet {
 	}
 
 	// WP_CONTENT_DIR
-	function _wp_content_dir($path = '') {
+	private function _wp_content_dir($path = '') {
 		return trailingslashit( trailingslashit( defined('WP_CONTENT_DIR')
 			? WP_CONTENT_DIR
 			: trailingslashit(ABSPATH) . 'wp-content'
@@ -352,7 +368,7 @@ class SimpleTweet {
 	}
 
 	// WP_CONTENT_URL
-	function _wp_content_url($path = '') {
+	private function _wp_content_url($path = '') {
 		return trailingslashit( trailingslashit( defined('WP_CONTENT_URL')
 			? WP_CONTENT_URL
 			: trailingslashit(get_option('siteurl')) . 'wp-content'
@@ -360,17 +376,17 @@ class SimpleTweet {
 	}
 
 	// WP_PLUGIN_DIR
-	function _wp_plugin_dir($path = '') {
+	private function _wp_plugin_dir($path = '') {
 		return trailingslashit($this->_wp_content_dir( 'plugins/' . preg_replace('/^\//', '', $path) ));
 	}
 
 	// WP_PLUGIN_URL
-	function _wp_plugin_url($path = '') {
+	private function _wp_plugin_url($path = '') {
 		return trailingslashit($this->_wp_content_url( 'plugins/' . preg_replace('/^\//', '', $path) ));
 	}
 
 	// Add Option Page
-	function _add_option_page($page_title, $function, $capability = 'administrator', $menu_title = '', $file = '') {
+	private function _add_option_page($page_title, $function, $capability = 'administrator', $menu_title = '', $file = '') {
 		if ($menu_title == '') $menu_title = $page_title;
 		if ($file == '') $file = $this->plugin_file;
 
@@ -382,18 +398,37 @@ class SimpleTweet {
 		$this->admin_hook = add_options_page($page_title, $menu_title, $capability, $file, $function);
 	}
 
+	private function _strlen($str, $enc = '') {
+		if (empty($enc))
+			$enc = $this->charset;
+		return (
+			function_exists('mb_strlen')
+			? mb_strlen($str, $enc)
+			: strlen($str)
+			);
+	}
+
+	private function _substr($str, $start, $length, $enc = ''){
+		if (empty($enc))
+			$enc = $this->charset;
+		return (
+			function_exists('mb_substr')
+			? mb_substr($str, $start, $length, $enc)
+			: substr($str, $start, $length)
+			);
+	}
 
 	//*****************************************************************************
 	// Action/Filter hook
 	//*****************************************************************************
 
 	// publish post
-	function publish_post($post_id = '') {
+	public function publish_post($post_id = '') {
 		return $this->_do_tweet( $post_id );
 	}
 
 	// plugin activation
-	function activation(){
+	public function activation(){
 		list($options, $current_user_options) = $this->_get_options();
 		$this->options = $this->_init_options( $options );
 		$this->options['activate'] = time();
@@ -402,7 +437,7 @@ class SimpleTweet {
 	}
 
 	// plugin deactivation
-	function deactivation(){
+	public function deactivation(){
 		list($options, $current_user_options) = $this->_get_options();
 		$this->options = $options;
 		if ( is_array($this->options) && count($this->options) > 0) {
@@ -413,12 +448,12 @@ class SimpleTweet {
 	}
 
 	// Add Admin Menu
-	function admin_menu() {
-		$this->_add_option_page( __('Simple Tweet', $this->textdomain_name), array($this,'optionPage'));
+	public function admin_menu() {
+		$this->_add_option_page( __('Simple Tweet', $this->textdomain_name), array($this,'option_page'));
 	}
 
 	// Add Settig link
-	function plugin_setting_links($links, $file) {
+	public function plugin_setting_links($links, $file) {
 		$this_plugin = plugin_basename(__FILE__);
 		if ($file == $this_plugin) {
 			$settings_link = '<a href="' . $this->admin_action . '">' . __('Settings') . '</a>';
@@ -429,23 +464,23 @@ class SimpleTweet {
 	}
 
 	// Add Content
-	function add_content($content) {
+	public function add_content($content) {
 		global $post;
 
 		list($options, $current_user_options) = $this->_get_options( $post->post_author );
 		if ( $options['add_content'] )
-			$content .= "\n" . $this->TweetThisLink();
+			$content .= "\n" . $this->tweet_this_link();
 		return $content;
 	}
 
-	function content_tweet($content) {
+	private function content_tweet($content) {
 		global $post;
 
 		if ( isset($post) ) {
 			$post_time = strtotime($post->post_date_gmt . ' +0000');
 			if ( $post_time >= $this->options['activate'] ) {
-				$status_id = (string) $this->_get_post_meta($post->ID, TWEET_METAKEY_SID);
-				$tweet_res = (string) $this->_get_post_meta($post->ID, TWEET_METAKEY_RES);
+				$status_id = (string) $this->_get_post_meta($post->ID, SimpleTweet::TWEET_METAKEY_SID);
+				$tweet_res = (string) $this->_get_post_meta($post->ID, SimpleTweet::TWEET_METAKEY_RES);
 				if ( empty($status_id) && empty($tweet_res) ) {
 					$this->_do_tweet( $post->ID );
 				}
@@ -456,14 +491,14 @@ class SimpleTweet {
 	}
 
 	// Option Page
-	function optionPage() {
+	public function option_page() {
 		return $this->_option_page();
 	}
 
 	//*****************************************************************************
 	// init options
 	//*****************************************************************************
-	function _init_options($options = ''){
+	private function _init_options($options = ''){
 		if (!is_array($options))
 			$options = array();
 
@@ -490,13 +525,13 @@ class SimpleTweet {
 			if ( isset($options['tinyurl']) ) {
 				if ( !is_array($options['tinyurl']) ) {
 					$options['shorten'] = $options['tinyurl'];
-					$options['tinyurl'] = array( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')), TWEET_TINYURL_URL );
+					$options['tinyurl'] = array( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')), SimpleTweet::TWEET_TINYURL_URL );
 				} else {
 					$options['shorten'] = $options['tinyurl'][0];
 				}
 			} else {
 				$options['shorten'] = true;
-				$options['tinyurl'] = array( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')), TWEET_TINYURL_URL );
+				$options['tinyurl'] = array( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')), SimpleTweet::TWEET_TINYURL_URL );
 			}
 		}
 
@@ -508,7 +543,7 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Do tweet
 	//*****************************************************************************
-	function _do_tweet($post_id = '') {
+	private function _do_tweet($post_id = '') {
 		if (empty($post_id))
 			return false;
 
@@ -521,8 +556,8 @@ class SimpleTweet {
 		list($this->options, $this->current_user_options) = $this->_get_options( $post->post_author );
 
 		$post_time = strtotime($post->post_date_gmt . ' +0000');
-		$meta_val  = $this->_get_post_meta( $post_id, TWEET_METAKEY_SID );
-		$meta_vals = $this->_get_post_revisions_meta( $post_id, TWEET_METAKEY_SID );
+		$meta_val  = $this->_get_post_meta( $post_id, SimpleTweet::TWEET_METAKEY_SID );
+		$meta_vals = $this->_get_post_revisions_meta( $post_id, SimpleTweet::TWEET_METAKEY_SID );
 		if ( !empty($meta_val) )
 			$meta_vals = array_merge( $meta_vals, (array) $meta_val );
 		if ( count($meta_vals) > 0 ) {
@@ -546,7 +581,7 @@ class SimpleTweet {
 			$post_excerpt = (!empty($post->post_excerpt) ? $post->post_excerpt : $post->post_content);
 
 			$url = get_permalink($post_id);
-//			$tiny = $this->_get_post_meta($post_id, TWEET_METAKEY_URL);
+//			$tiny = $this->_get_post_meta($post_id, SimpleTweet::TWEET_METAKEY_URL);
 //			$tiny_url = ( is_array($tiny) && $tiny['limit'] > time()
 //				? $tiny['tiny_url']
 //				: '' );
@@ -554,14 +589,14 @@ class SimpleTweet {
 			if ( !empty($tiny_url) )
 				$this->_update_post_meta(
 					$post_id ,
-					TWEET_METAKEY_URL,
+					SimpleTweet::TWEET_METAKEY_URL,
 					array(
 						'url' => $url ,
-						'limit' => time() + TWEET_TINYURL_LIMIT ,
+						'limit' => time() + SimpleTweet::TWEET_TINYURL_LIMIT ,
 						'tiny_url' => $tiny_url
 						)
 					);
-			$permalink = ( $this->options['shorten'] || mb_strlen($msg . $this->options['separator'] . $url) > TWEET_MAX
+			$permalink = ( $this->options['shorten'] || $this->_strlen($msg . $this->options['separator'] . $url) > SimpleTweet::TWEET_MAX
 				? ( !empty($tiny_url) ? $tiny_url : $url )
 				: $url );
 
@@ -578,8 +613,8 @@ class SimpleTweet {
 				? $this->options['separator'] . $permalink
 				: '');
 			$tweet_msg = $msg . $permalink;
-			if ( mb_strlen($tweet_msg, $this->charset) >= TWEET_MAX )
-				$tweet_msg = mb_substr($msg, 0, TWEET_MAX - (mb_strlen($permalink, $this->charset) + 3), $this->charset) . '...' . $permalink;
+			if ( $this->_strlen($tweet_msg, $this->charset) >= SimpleTweet::TWEET_MAX )
+				$tweet_msg = $this->_substr($msg, 0, SimpleTweet::TWEET_MAX - ($this->_strlen($permalink) + 3)) . '...' . $permalink;
 			$this->_log .= "tweet message:{$tweet_msg}\n";
 
 			if ($this->tweet_msg != $tweet_msg) {
@@ -588,13 +623,13 @@ class SimpleTweet {
 				$tweet_result = FALSE;
 				if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->options['access_token']) && !is_null($this->options['access_token_secret']) )
 					$tweet_result = $this->_post_twitter_OAuth($tweet_msg, $this->options['access_token'], $this->options['access_token_secret']);
-				if ( $tweet_result === FALSE )
-					$tweet_result = $this->_post_twitter($tweet_msg, $this->options['user'], $this->options['password']);
+				//if ( $tweet_result === FALSE )
+				//	$tweet_result = $this->_post_twitter($tweet_msg, $this->options['user'], $this->options['password']);
 
 				if ( $tweet_result !== FALSE ) {
 					$tweet_id = $this->_get_tweet_id($tweet_result);
 					$this->_log .= "id:{$tweet_id}\n";
-					if ( $this->_update_post_meta($post_id, TWEET_METAKEY_SID, $tweet_id) )
+					if ( $this->_update_post_meta($post_id, SimpleTweet::TWEET_METAKEY_SID, $tweet_id) )
 						$this->_log = "*** OK! ***\n\n" . $this->_log;
 					else
 						$this->_log = "** ERROR **\n\n" . $this->_log;
@@ -602,7 +637,7 @@ class SimpleTweet {
 					$this->_log = "** ERROR **\n\n" . $tweet_result . "\n" . $this->_log;
 				}
 
-				$this->_update_post_meta($post_id, TWEET_METAKEY_RES, $tweet_result);
+				$this->_update_post_meta($post_id, SimpleTweet::TWEET_METAKEY_RES, $tweet_result);
 			}
 		}
 
@@ -619,7 +654,7 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Post to Twitter (OAuth)!
 	//*****************************************************************************
-	function _post_twitter_OAuth( $tweet, $access_token = null, $access_token_secret = null ) {
+	private function _post_twitter_OAuth( $tweet, $access_token = null, $access_token_secret = null ) {
 		if ( !class_exists('TwitterOAuth') || is_null($this->consumer_key) || is_null($this->consumer_secret) )
 			return FALSE;
 
@@ -627,7 +662,7 @@ class SimpleTweet {
 			return FALSE;
 
 		$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret, $access_token, $access_token_secret);
-		$result = $oauth->OAuthRequest(TWEET_SENT_URL, array("status"=>$tweet), "POST");
+		$result = $oauth->OAuthRequest(SimpleTweet::TWEET_SENT_URL, array("status"=>$tweet), "POST");
 		$this->_log .=	"--- OAuth Result ! ---\n" . "results:{$result}\n";
 		unset($oauth);
 
@@ -637,7 +672,7 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Post to Twitter!
 	//*****************************************************************************
-	function _post_twitter($tweet, $username = '', $password = '') {
+	private function _post_twitter($tweet, $username = '', $password = '') {
 		if (empty($tweet) || empty($username) || empty($password))
 			return FALSE;
 
@@ -657,10 +692,10 @@ class SimpleTweet {
 				);
 			$snoop->user = $username;
 			$snoop->pass = $password;
-			$snoop->read_timeout = TWEET_TIMEOUT;
+			$snoop->read_timeout = SimpleTweet::TWEET_TIMEOUT;
 			$snoop->timed_out = true;
 			$snoop->submit(
-				TWEET_SENT_URL ,
+				SimpleTweet::TWEET_SENT_URL ,
 				array(
 					'status' => $tweet ,
 					'source' => $this->twitter_client_name
@@ -681,7 +716,7 @@ class SimpleTweet {
 		if ($result === FALSE) {
 			$params = '?status=' . rawurlencode($tweet) .
 				  '&source=' . $this->twitter_client_name;
-			$result = @file_get_contents(TWEET_SENT_URL.$params , false, stream_context_create(array(
+			$result = @file_get_contents(SimpleTweet::TWEET_SENT_URL.$params , false, stream_context_create(array(
 				 "http" => array(
 					"method" => "POST" ,
 					"header" => "Authorization: Basic ". base64_encode($username. ":". $password)
@@ -699,7 +734,7 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Make Tweet Message
 	//*****************************************************************************
-	function _make_tweet_msg($text, $twitter_user, $post_id, $post_title = '', $post_excerpt = '', $permalink = '') {
+	private function _make_tweet_msg($text, $twitter_user, $post_id, $post_title = '', $post_excerpt = '', $permalink = '') {
 		if ( empty($text) )
 			return '';
 
@@ -729,25 +764,25 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Check URL
 	//*****************************************************************************
-	function _chk_url( $url ) {
+	private function _chk_url( $url ) {
 		return ( preg_match("/^s?https?:\/\/[-_.!~*'\(\)a-zA-Z0-9;\/?:\@&=+\$,%#]+$/i", $url) > 0 );
 	}
 
 	//*****************************************************************************
 	// Get Short link
 	//*****************************************************************************
-	function _get_shortlink($permalink, $post_id, $options ) {
+	private function _get_shortlink($permalink, $post_id, $options ) {
 		$shortlink = $permalink;
 
 		if ( $options['shorten'] !== FALSE ) {
 			if ( $options['tinyurl'][0] ) {
-				$shortlink = $this->_get_TinyURL($permalink, TWEET_TINYURL_URL);
+				$shortlink = $this->_get_TinyURL($permalink, SimpleTweet::TWEET_TINYURL_URL);
 			} elseif ( $options['bitly'][0] ) {
-				$shortlink = $this->_get_bitly($permalink, TWEET_BITLY_URL, $options['bitly'][1], $options['bitly'][2]);
+				$shortlink = $this->_get_bitly($permalink, SimpleTweet::TWEET_BITLY_URL, $options['bitly'][1], $options['bitly'][2]);
 			} elseif ( $options['jmp'][0] ) {
-				$shortlink = $this->_get_bitly($permalink, TWEET_JMP_URL, $options['jmp'][1], $options['jmp'][2]);
+				$shortlink = $this->_get_bitly($permalink, SimpleTweet::TWEET_JMP_URL, $options['jmp'][1], $options['jmp'][2]);
 			} elseif ( $options['isgd'][0] ) {
-				$shortlink = $this->_get_TinyURL(urlencode($permalink), TWEET_ISGD_URL);
+				$shortlink = $this->_get_TinyURL(rawurlencode($permalink), SimpleTweet::TWEET_ISGD_URL);
 			} elseif ( $options['other_tinyurl'][0] ) {
 				$shortlink = $this->_get_TinyURL($permalink, $options['other_tinyurl'][1]);
 			} elseif ( function_exists('get_shortlink') ) {
@@ -765,11 +800,11 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Get bit.ly
 	//*****************************************************************************
-	function _get_bitly($url = '', $get_url = TWEET_BITLY_URL, $user = TWEET_BITLY_USER, $apikey = TWEET_BITLY_APIKEY ) {
+	private function _get_bitly($url = '', $get_url = SimpleTweet::TWEET_BITLY_URL, $user = SimpleTweet::TWEET_BITLY_USER, $apikey = SimpleTweet::TWEET_BITLY_APIKEY ) {
 		if (empty($url) || empty($user) || empty($apikey))
 			return $url;
 
-		$result = $this->_get_TinyURL(urlencode($url), sprintf($get_url, $user, $apikey));
+		$result = $this->_get_TinyURL(rawurlencode($url), sprintf($get_url, $user, $apikey));
 		if ( preg_match( '/[\'"]shortUrl[\'"]:[ \t]*[\'"]([^\'"]*)[\'"]/iUs', $result, $matches ) ) {
 			$result = (isset($matches[1]) ? $matches[1] : $url);
 		} else {
@@ -783,7 +818,7 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Get Tiny URL
 	//*****************************************************************************
-	function _get_TinyURL($url = '', $get_url = TWEET_TINYURL_URL ) {
+	private function _get_TinyURL($url = '', $get_url = SimpleTweet::TWEET_TINYURL_URL ) {
 		if (empty($url))
 			return '';
 
@@ -801,7 +836,7 @@ class SimpleTweet {
 
 			if ( class_exists('Snoopy') ) {
 				$snoop = new Snoopy;
-				$snoop->read_timeout = TWEET_TIMEOUT;
+				$snoop->read_timeout = SimpleTweet::TWEET_TIMEOUT;
 				$snoop->timed_out = true;
 				$snoop->fetch($get_url);
 				$result = ( strpos($snoop->response_code, '200') !== FALSE
@@ -829,7 +864,7 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Get TweetID
 	//*****************************************************************************
-	function _get_tweet_id($result = '') {
+	private function _get_tweet_id($result = '') {
 		if (empty($result)) return '';
 
 		$tweet_id = '';
@@ -853,7 +888,7 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Show Option Page
 	//*****************************************************************************
-	function _option_page() {
+	private function _option_page() {
 		if (isset($_POST['options_update'])) {
 			// Check Nonce Field
 			if ( function_exists('check_admin_referer') )
@@ -935,7 +970,7 @@ class SimpleTweet {
 		echo ( $this->error == 0 ? $out : '' ) . "\n";
 	}
 
-	function user_profile( $profileuser ){
+	public function user_profile( $profileuser ){
 		if ( current_user_can('publish_posts') ) {
 			list($options, $current_user_options) = $this->_get_options( $profileuser->ID );
 			$current_user_options = $this->_init_options( $current_user_options );
@@ -946,16 +981,19 @@ class SimpleTweet {
 		}
 	}
 
-	function user_profile_update( $user_id ) {
+	public function user_profile_update( $user_id ) {
 		if ( current_user_can('publish_posts') ) {
 			list($options, $current_user_options) = $this->_get_options( $user_id );
 			$current_user_options = $this->_init_options( $current_user_options );
 			$current_user_options = $this->_get_post_data( $_POST, $current_user_options );
-			update_usermeta( $user_id, $this->option_name, $current_user_options );
+			if (function_exists('update_user_meta'))
+				update_user_meta($user_id, $this->option_name, $current_user_options);
+			else
+				update_usermeta($user_id, $this->option_name, $current_user_options);
 		}
 	}
 
-	function _get_post_data( $request, $options = NULL, $is_admin = FALSE ) {
+	private function _get_post_data( $request, $options = NULL, $is_admin = FALSE ) {
 		if ( !is_array($options) )
 			$options = array();
 
@@ -1031,10 +1069,10 @@ class SimpleTweet {
 			break;
 		}
 		$options['shorten']    = (isset($request['shorten']) && $request['shorten'] == 'on') ? true : false;
-		$options['tinyurl']    = array($tinyurl, TWEET_TINYURL_URL);
+		$options['tinyurl']    = array($tinyurl, SimpleTweet::TWEET_TINYURL_URL);
 		$options['bitly']      = array($bitly, $request['bitly_name'], $request['bitly_api']);
 		$options['jmp']        = array($jmp, $request['jmp_name'], $request['jmp_api']);
-		$options['isgd']       = array($isgd, TWEET_ISGD_URL);
+		$options['isgd']       = array($isgd, SimpleTweet::TWEET_ISGD_URL);
 		$options['other_tinyurl'] = array(
 			$other ,
 			$request['other_tinyurl_url'] ,
@@ -1062,7 +1100,7 @@ class SimpleTweet {
 		return $options;
 	}
 
-	function _options_table( $options, $is_admin = FALSE ) {
+	private function _options_table( $options, $is_admin = FALSE ) {
 		$out  = '';
 
 		$out .= "<table class=\"optiontable form-table\" style=\"margin-top:0;\"><tbody>\n";
@@ -1081,7 +1119,7 @@ class SimpleTweet {
 				if ( $is_admin ) {
 					$out .= "<tr>";
 					$out .= '<th style="width:120px;padding:0;">'.__('Get Consumer Key', $this->textdomain_name)."</th>";
-					$out .= '<td style="padding:0;"><a href="'.TWEET_OAUTH_CLIENTS_URL.'" target="_blank">'.__('Applications Using Twitter', $this->textdomain_name).'</a></td>';
+					$out .= '<td style="padding:0;"><a href="'.SimpleTweet::TWEET_OAUTH_CLIENTS_URL.'" target="_blank">'.__('Applications Using Twitter', $this->textdomain_name).'</a></td>';
 					$out .= "</tr>\n";
 					$out .= "<tr>";
 					$out .= '<th style="width:120px;padding:0;">'.__('Consumer Key', $this->textdomain_name)."</th>";
@@ -1137,6 +1175,7 @@ class SimpleTweet {
 			$out .= "</tr>\n";
 		}
 
+/*
 		if ( is_null($this->consumer_key) || is_null($this->consumer_secret) || is_null($options['access_token']) || is_null($options['access_token_secret']) ) {
 			$out .= "<tr>";
 			$out .= '<th>'.__('Twitter ID', $this->textdomain_name)."</th>";
@@ -1159,6 +1198,7 @@ class SimpleTweet {
 			$out .= "</td>";
 			$out .= "</tr>\n";
 		}
+*/
 
 		$out .= "<tr>";
 		$out .= "<th>".__('Tweet text', $this->textdomain_name)."</th>";
@@ -1219,7 +1259,7 @@ class SimpleTweet {
 		$out .= "<br />\n";
 		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"other\" value=\"other\" ".($other ? 'checked="checked " ' : '')."/> ";
 		$out .= __('Other Service', $this->textdomain_name) . ' : ';
-		$out .= "<input type=\"text\" name=\"other_tinyurl_url\" id=\"other_tinyurl_url\" size=\"100\" value=\"".htmlspecialchars( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')) && $options['other_tinyurl'][1] === TWEET_TINYURL_URL ? '' : $options['other_tinyurl'][1])."\" /> ";
+		$out .= "<input type=\"text\" name=\"other_tinyurl_url\" id=\"other_tinyurl_url\" size=\"100\" value=\"".htmlspecialchars( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')) && $options['other_tinyurl'][1] === SimpleTweet::TWEET_TINYURL_URL ? '' : $options['other_tinyurl'][1])."\" /> ";
 		$out .= "</td>";
 		$out .= "</tr>\n";
 
@@ -1275,14 +1315,14 @@ class SimpleTweet {
 	}
 
 	// delete all settings
-	function _delete_settings() {
+	private function _delete_settings() {
 		global $wpdb;
 
 		$wpdb->query($wpdb->prepare(
 			"DELETE FROM $wpdb->postmeta WHERE meta_key in (%s, %s, %s)" ,
-			$wpdb->escape(TWEET_METAKEY_SID) ,
-			$wpdb->escape(TWEET_METAKEY_RES) ,
-			$wpdb->escape(TWEET_METAKEY_URL)
+			$wpdb->escape(SimpleTweet::TWEET_METAKEY_SID) ,
+			$wpdb->escape(SimpleTweet::TWEET_METAKEY_RES) ,
+			$wpdb->escape(SimpleTweet::TWEET_METAKEY_URL)
 			)
 		);
 
@@ -1292,7 +1332,7 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Get Tweet this Link
 	//*****************************************************************************
-	function TweetThisLink($inreply_to = FALSE) {
+	public function tweet_this_link($inreply_to = FALSE) {
 		global $post;
 
 		if ( !isset($post) )
@@ -1303,22 +1343,22 @@ class SimpleTweet {
 		$post_excerpt = (!empty($post->post_excerpt) ? $post->post_excerpt : $post->post_content);
 		list($options, $current_user_options) = $this->_get_options( $post->post_author );
 
-		$status_id = (string) $this->_get_post_meta($post_id, TWEET_METAKEY_SID);
+		$status_id = (string) $this->_get_post_meta($post_id, SimpleTweet::TWEET_METAKEY_SID);
 //		if ( $inreply_to && empty($status_id) )
 //			return false;
 
 		if ( $options['shorten'] ) {
-			$tiny = $this->_get_post_meta($post_id, TWEET_METAKEY_URL);
+			$tiny = $this->_get_post_meta($post_id, SimpleTweet::TWEET_METAKEY_URL);
 			if ( !empty($tiny) && !is_array($tiny) ) {
 				$tiny_url = $tiny;
 				$tiny = array(
 					'url' => get_permalink($post_id) ,
-					'limit' => time() + TWEET_TINYURL_LIMIT ,
+					'limit' => time() + SimpleTweet::TWEET_TINYURL_LIMIT ,
 					'tiny_url' => $tiny_url
 					);
 				$this->_update_post_meta(
 					$post_id ,
-					TWEET_METAKEY_URL,
+					SimpleTweet::TWEET_METAKEY_URL,
 					$tiny
 					);
 			} else {
@@ -1334,10 +1374,10 @@ class SimpleTweet {
 					$tiny_url = $this->_get_shortlink($permalink, $post_id, $options);
 					$this->_update_post_meta(
 						$post_id ,
-						TWEET_METAKEY_URL,
+						SimpleTweet::TWEET_METAKEY_URL,
 						array(
 							'url'      => get_permalink($post_id) ,
-							'limit'    => time() + TWEET_TINYURL_LIMIT ,
+							'limit'    => time() + SimpleTweet::TWEET_TINYURL_LIMIT ,
 							'tiny_url' => $tiny_url
 							)
 						);
@@ -1353,8 +1393,8 @@ class SimpleTweet {
 		$link = $this->_make_tweet_msg( $options['tweet_this_link'], $options['user'], $post_id, $post_title, $post_excerpt, $permalink);
 		$text = $this->_make_tweet_msg( $options['tweet_this_text'], $options['user'], $post_id, $post_title, $post_excerpt, $permalink);
 
-		$tweet_this_link = '<a href="' . TWEET_HOME_URL .
-			'?status=' . urlencode($link) .
+		$tweet_this_link = '<a href="' . SimpleTweet::TWEET_HOME_URL .
+			'?status=' . rawurlencode($link) .
 			( !empty($status_id) ? '&amp;in_reply_to_status_id=' . $status_id : '' ) .
 			( $inreply_to && !empty($options['user']) ? '&amp;in_reply_to=' . $options['user'] : '' ).
 			'" class="tweet-this" >' .
@@ -1371,32 +1411,8 @@ class SimpleTweet {
  *****************************************************************************/
 $simple_tweet = new SimpleTweet();
 
-// add admin dashbord
-if (is_admin()) {
-	add_action('admin_menu', array(&$simple_tweet,'admin_menu'));
-	add_filter('plugin_action_links', array(&$simple_tweet, 'plugin_setting_links'), 10, 2 );
-
-	add_action('show_user_profile', array(&$simple_tweet,'user_profile'));
-	add_action('edit_user_profile', array(&$simple_tweet,'user_profile'));
-
-	add_action('personal_options_update', array(&$simple_tweet,'user_profile_update'));
-	add_action('edit_user_profile_update', array(&$simple_tweet,'user_profile_update'));
-
-	if ( function_exists('register_activation_hook') )
-		register_activation_hook(__FILE__, array(&$simple_tweet, 'activation'));
-	if ( function_exists('register_deactivation_hook') )
-		register_deactivation_hook(__FILE__, array(&$simple_tweet, 'deactivation'));
-}
-
-// post publish
-add_action('publish_post', array(&$simple_tweet, 'publish_post'));
-add_action('publish_future_post', array(&$simple_tweet, 'publish_post'));
-
-// for ktai-entry
-add_action('publish_phone', array(&$simple_tweet, 'publish_post'));
-
-// add content
-add_filter('the_content', array (&$simple_tweet, 'add_content'));
-//add_filter('the_content', array (&$simple_tweet, 'content_tweet'));
-
+if ( function_exists('register_activation_hook') )
+	register_activation_hook(__FILE__, array(&$simple_tweet, 'activation'));
+if ( function_exists('register_deactivation_hook') )
+	register_deactivation_hook(__FILE__, array(&$simple_tweet, 'deactivation'));
 ?>
