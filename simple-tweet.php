@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.7
+Version: 1.3.7.1
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -774,7 +774,7 @@ class SimpleTweet {
 	private function _get_shortlink($permalink, $post_id, $options ) {
 		$shortlink = $permalink;
 
-		if ( $options['shorten'] !== FALSE ) {
+		if ( $options['shorten'] ) {
 			if ( $options['tinyurl'][0] ) {
 				$shortlink = $this->_get_TinyURL($permalink, SimpleTweet::TWEET_TINYURL_URL);
 			} elseif ( $options['bitly'][0] ) {
@@ -1073,10 +1073,7 @@ class SimpleTweet {
 		$options['bitly']      = array($bitly, $request['bitly_name'], $request['bitly_api']);
 		$options['jmp']        = array($jmp, $request['jmp_name'], $request['jmp_api']);
 		$options['isgd']       = array($isgd, SimpleTweet::TWEET_ISGD_URL);
-		$options['other_tinyurl'] = array(
-			$other ,
-			$request['other_tinyurl_url'] ,
-			);
+		$options['other_tinyurl'] = array($other, $request['other_tinyurl_url']);
 
 		$options['tweet_without_url']  = (isset($request['tweet_without_url']) && $request['tweet_without_url'] == 'on' ? true : false);
 
@@ -1205,21 +1202,21 @@ class SimpleTweet {
 		$out .= "<td>";
 		$out .= "<input type=\"text\" name=\"tweet_text\" id=\"tweet_text\" size=\"100\" value=\"".htmlspecialchars($options['tweet_text'])."\" /> ";
 		$out .= "<br />\n";
-		$out .= "<input type=\"checkbox\" name=\"tweet_without_url\" id=\"tweet_without_url\" value=\"on\"".($options['tweet_without_url'] === true ? " checked=\"true\"" : "")." /> ";
+		$out .= "<input type=\"checkbox\" name=\"tweet_without_url\" id=\"tweet_without_url\" value=\"on\"".($options['tweet_without_url'] ? " checked=\"true\"" : "")." /> ";
 		$out .= __('Tweet without Permalink', $this->textdomain_name);
 		$out .= "</td>";
 		$out .= "</tr>\n";
 
 		$shortlink = $tinyurl = $bitly = $jmp = $isgd = $other = false;
-		if ($options['tinyurl'][0] === true) {
+		if ($options['tinyurl'][0]) {
 			$tinyurl = true;
-		} elseif ($options['bitly'][0] === true) {
+		} elseif ($options['bitly'][0]) {
 			$bitly = true;
-		} elseif ($options['jmp'][0] === true) {
+		} elseif ($options['jmp'][0]) {
 			$jmp = true;
-		} elseif ($options['isgd'][0] === true) {
+		} elseif ($options['isgd'][0]) {
 			$isgd = true;
-		} elseif ($options['other_tinyurl'][0] === true) {
+		} elseif ($options['other_tinyurl'][0]) {
 			$other = true;
 		} elseif (!(function_exists('get_shortlink') || function_exists('wpme_get_shortlink'))) {
 			$tinyurl = true;
@@ -1229,7 +1226,7 @@ class SimpleTweet {
 		$out .= "<tr>";
 		$out .= "<th>".__('Short Link', $this->textdomain_name)."</th>";
 		$out .= "<td>";
-		$out .= "<input type=\"checkbox\" name=\"shorten\" id=\"shorten\" value=\"on\" ".($options['shorten'] === true ? 'checked="checked" ' : '')."/> ";
+		$out .= '<input type="checkbox" name="shorten" id="shorten" value="on" '.($options['shorten'] ? 'checked="checked" ' : '').'/> ';
 		$out .= __('Compress Permalink', $this->textdomain_name);
 		$out .= "<br />\n";
 		if ( function_exists('get_shortlink') && class_exists('ShortLinkMaker') ) {
@@ -1271,7 +1268,7 @@ class SimpleTweet {
 		$out .= "<tr>";
 		$out .= "<th></th>";
 		$out .= "<td>";
-		$out .= "<input type=\"checkbox\" name=\"add_content\" id=\"add_content\" value=\"on\" style=\"margin-right:0.5em;\" ".($options['add_content'] === true ? " checked=\"true\"" : "")." />";
+		$out .= "<input type=\"checkbox\" name=\"add_content\" id=\"add_content\" value=\"on\" style=\"margin-right:0.5em;\" ".($options['add_content'] ? " checked=\"true\"" : "")." />";
 		$out .= __("Add \"Tweet this\" link", $this->textdomain_name);
 		$out .= "</td>";
 		$out .= "</tr>\n";
@@ -1303,7 +1300,7 @@ class SimpleTweet {
 			$out .= "<tr>";
 			$out .= "<th></th>";
 			$out .= "<td>";
-			$out .= "<input type=\"checkbox\" name=\"log_write\" id=\"log_write\" value=\"on\"".($options['log_write'] === true ? " checked=\"true\"" : "")." /> ";
+			$out .= "<input type=\"checkbox\" name=\"log_write\" id=\"log_write\" value=\"on\"".($options['log_write'] ? " checked=\"true\"" : "")." /> ";
 			$out .= __('Output log? (debug mode)', $this->textdomain_name);
 			$out .= "</td>";
 			$out .= "</tr>\n";
