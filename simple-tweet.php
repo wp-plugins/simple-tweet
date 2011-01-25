@@ -1124,7 +1124,7 @@ class SimpleTweet {
 					$out .= "</tr>\n";
 					$out .= "<tr>";
 					$out .= '<th style="width:120px;padding:0;">'.__('Consumer Secret', $this->textdomain_name)."</th>";
-					$out .= '<td style="padding:0;"><input type="text" name="consumer_secret" id="consumer_secret" size="50" value="'.$this->consumer_secret}.'" /></td>';
+					$out .= '<td style="padding:0;"><input type="text" name="consumer_secret" id="consumer_secret" size="50" value="'.$this->consumer_secret.'" /></td>';
 					$out .= "</tr>\n";
 					$out .= '<tr>';
 					$out .= '<th style="width:120px;padding:0;">'.__("What's a tweet", $this->textdomain_name)."</th>";
