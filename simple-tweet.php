@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.7.1
+Version: 1.3.7.2
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -975,7 +975,7 @@ class SimpleTweet {
 			list($options, $current_user_options) = $this->_get_options( $profileuser->ID );
 			$current_user_options = $this->_init_options( $current_user_options );
 			if ( count($current_user_options) > 0 ) {
-				echo "<h3>".__('Simple Tweet Options', $this->textdomain_name)."</h3>\n\n";
+				echo '<h3 id="simple-tweet">'.__('Simple Tweet Options', $this->textdomain_name)."</h3>\n\n";
 				echo $this->_options_table( $current_user_options );
 			}
 		}
@@ -1104,30 +1104,34 @@ class SimpleTweet {
 
 		if ( class_exists('TwitterOAuth') ) {
 			if ( $is_admin || (!is_null($this->consumer_key) && !is_null($this->consumer_secret)) ) {
-				$out .= "<tr>";
-				$out .= "<th>";
+				$out .= '<tr>';
+				$out .= '<th>';
 				$out .= __('Twitter OAuth', $this->textdomain_name);
 				if ( is_null($options['access_token']) || is_null($options['access_token_secret']) ) {
 					$out .= '<br/>'.__('<a href="http://wppluginsj.sourceforge.jp/simple-tweet/simple-tweet-oauth-en/" title="WordPress Plugins/JSeries » Simple Tweet OAuth Setting">OAuth Setting</a>', $this->textdomain_name);
 				}
-				$out .= "</th>";
-				$out .= "<td>";
+				$out .= '</th>';
+				$out .= '<td>';
 				$out .= "<table style=\"margin-top:0;\"><tbody>\n";
 				if ( $is_admin ) {
-					$out .= "<tr>";
+					$out .= '<tr>';
 					$out .= '<th style="width:120px;padding:0;">'.__('Get Consumer Key', $this->textdomain_name)."</th>";
 					$out .= '<td style="padding:0;"><a href="'.SimpleTweet::TWEET_OAUTH_CLIENTS_URL.'" target="_blank">'.__('Applications Using Twitter', $this->textdomain_name).'</a></td>';
 					$out .= "</tr>\n";
-					$out .= "<tr>";
+					$out .= '<tr>';
 					$out .= '<th style="width:120px;padding:0;">'.__('Consumer Key', $this->textdomain_name)."</th>";
-					$out .= "<td style=\"padding:0;\"><input type=\"text\" name=\"consumer_key\" id=\"consumer_key\" size=\"50\" value=\"{$this->consumer_key}\" /></td>";
+					$out .= '<td style="padding:0;"><input type="text" name="consumer_key" id="consumer_key" size="50" value="'.$this->consumer_key.'" /></td>';
 					$out .= "</tr>\n";
 					$out .= "<tr>";
 					$out .= '<th style="width:120px;padding:0;">'.__('Consumer Secret', $this->textdomain_name)."</th>";
-					$out .= "<td style=\"padding:0;\"><input type=\"text\" name=\"consumer_secret\" id=\"consumer_secret\" size=\"50\" value=\"{$this->consumer_secret}\" /></td>";
+					$out .= '<td style="padding:0;"><input type="text" name="consumer_secret" id="consumer_secret" size="50" value="'.$this->consumer_secret}.'" /></td>';
 					$out .= "</tr>\n";
-				}
-				if ( !is_null($this->consumer_key) && !is_null($this->consumer_secret) ) {
+					$out .= '<tr>';
+					$out .= '<th style="width:120px;padding:0;">'.__("What's a tweet", $this->textdomain_name)."</th>";
+					$out .= '<td style="padding:0;">'.__('Please set the contents tweet in "<a href="profile.php#simple-tweet">your profile</a>"', $this->textdomain_name).'</a></td>';
+					$out .= "</tr>\n";
+
+				} elseif ( !is_null($this->consumer_key) && !is_null($this->consumer_secret) ) {
 					if ( is_null($options['access_token']) || is_null($options['access_token_secret']) ) {
 						$this->request_token = $this->request_token_secret = null;
 						$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret);
@@ -1197,104 +1201,106 @@ class SimpleTweet {
 		}
 */
 
-		$out .= "<tr>";
-		$out .= "<th>".__('Tweet text', $this->textdomain_name)."</th>";
-		$out .= "<td>";
-		$out .= "<input type=\"text\" name=\"tweet_text\" id=\"tweet_text\" size=\"100\" value=\"".htmlspecialchars($options['tweet_text'])."\" /> ";
-		$out .= "<br />\n";
-		$out .= "<input type=\"checkbox\" name=\"tweet_without_url\" id=\"tweet_without_url\" value=\"on\"".($options['tweet_without_url'] ? " checked=\"true\"" : "")." /> ";
-		$out .= __('Tweet without Permalink', $this->textdomain_name);
-		$out .= "</td>";
-		$out .= "</tr>\n";
-
-		$shortlink = $tinyurl = $bitly = $jmp = $isgd = $other = false;
-		if ($options['tinyurl'][0]) {
-			$tinyurl = true;
-		} elseif ($options['bitly'][0]) {
-			$bitly = true;
-		} elseif ($options['jmp'][0]) {
-			$jmp = true;
-		} elseif ($options['isgd'][0]) {
-			$isgd = true;
-		} elseif ($options['other_tinyurl'][0]) {
-			$other = true;
-		} elseif (!(function_exists('get_shortlink') || function_exists('wpme_get_shortlink'))) {
-			$tinyurl = true;
-		} else {
-			$shortlink = true;
-		}
-		$out .= "<tr>";
-		$out .= "<th>".__('Short Link', $this->textdomain_name)."</th>";
-		$out .= "<td>";
-		$out .= '<input type="checkbox" name="shorten" id="shorten" value="on" '.($options['shorten'] ? 'checked="checked" ' : '').'/> ';
-		$out .= __('Compress Permalink', $this->textdomain_name);
-		$out .= "<br />\n";
-		if ( function_exists('get_shortlink') && class_exists('ShortLinkMaker') ) {
-			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"shortlink\" value=\"shortlink\" ".($shortlink ? 'checked="checked " ' : '')."/> ";
-			$out .= '<a href="http://wordpress.org/extend/plugins/short-link-maker/" title="WordPress &gt; Short link maker &laquo; WordPress Plugins">Short link maker</a>';
+		if ( !$is_admin ) {
+			$out .= "<tr>";
+			$out .= "<th>".__('Tweet text', $this->textdomain_name)."</th>";
+			$out .= "<td>";
+			$out .= "<input type=\"text\" name=\"tweet_text\" id=\"tweet_text\" size=\"100\" value=\"".htmlspecialchars($options['tweet_text'])."\" /> ";
 			$out .= "<br />\n";
-		} elseif ( function_exists('wpme_get_shortlink') ) {
-			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"shortlink\" value=\"shortlink\" ".($shortlink ? 'checked="checked " ' : '')."/> ";
-			$out .= '<a href="http://wordpress.org/extend/plugins/stats/" title="WordPress &gt; WordPress.com Stats &laquo; WordPress Plugins">WordPress.com Stats</a>';
+			$out .= "<input type=\"checkbox\" name=\"tweet_without_url\" id=\"tweet_without_url\" value=\"on\"".($options['tweet_without_url'] ? " checked=\"true\"" : "")." /> ";
+			$out .= __('Tweet without Permalink', $this->textdomain_name);
+			$out .= "</td>";
+			$out .= "</tr>\n";
+
+			$shortlink = $tinyurl = $bitly = $jmp = $isgd = $other = false;
+			if ($options['tinyurl'][0]) {
+				$tinyurl = true;
+			} elseif ($options['bitly'][0]) {
+				$bitly = true;
+			} elseif ($options['jmp'][0]) {
+				$jmp = true;
+			} elseif ($options['isgd'][0]) {
+				$isgd = true;
+			} elseif ($options['other_tinyurl'][0]) {
+				$other = true;
+			} elseif (!(function_exists('get_shortlink') || function_exists('wpme_get_shortlink'))) {
+				$tinyurl = true;
+			} else {
+				$shortlink = true;
+			}
+			$out .= "<tr>";
+			$out .= "<th>".__('Short Link', $this->textdomain_name)."</th>";
+			$out .= "<td>";
+			$out .= '<input type="checkbox" name="shorten" id="shorten" value="on" '.($options['shorten'] ? 'checked="checked" ' : '').'/> ';
+			$out .= __('Compress Permalink', $this->textdomain_name);
 			$out .= "<br />\n";
+			if ( function_exists('get_shortlink') && class_exists('ShortLinkMaker') ) {
+				$out .= "<input type=\"radio\" name=\"shortlink\" id=\"shortlink\" value=\"shortlink\" ".($shortlink ? 'checked="checked " ' : '')."/> ";
+				$out .= '<a href="http://wordpress.org/extend/plugins/short-link-maker/" title="WordPress &gt; Short link maker &laquo; WordPress Plugins">Short link maker</a>';
+				$out .= "<br />\n";
+			} elseif ( function_exists('wpme_get_shortlink') ) {
+				$out .= "<input type=\"radio\" name=\"shortlink\" id=\"shortlink\" value=\"shortlink\" ".($shortlink ? 'checked="checked " ' : '')."/> ";
+				$out .= '<a href="http://wordpress.org/extend/plugins/stats/" title="WordPress &gt; WordPress.com Stats &laquo; WordPress Plugins">WordPress.com Stats</a>';
+				$out .= "<br />\n";
+			}
+			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"bitly\" value=\"bitly\" ".($bitly ? 'checked="checked " ' : '')."/> ";
+			$out .= '<a href="http://bit.ly/" title="bit.ly, a simple url shortener">bit.ly</a> : ';
+			$out .= __('User Name', $this->textdomain_name)."<input type=\"text\" name=\"bitly_name\" id=\"bitly_name\" size=\"20\" value=\"".htmlspecialchars( $options['bitly'][1] )."\" /> ";
+			$out .= __('bit.ly API Key', $this->textdomain_name)."<input type=\"text\" name=\"bitly_api\" id=\"bitly_api\" size=\"30\" value=\"".htmlspecialchars( $options['bitly'][2] )."\" /> ";
+			$out .= "<br />\n";
+			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"jmp\" value=\"jmp\" ".($jmp ? 'checked="checked " ' : '')."/> ";
+			$out .= '<a href="http://j.mp/" title="j.mp, a simple url shortener">j.mp</a> : ';
+			$out .= __('User Name', $this->textdomain_name)."<input type=\"text\" name=\"jmp_name\" id=\"jmp_name\" size=\"20\" value=\"".htmlspecialchars( $options['jmp'][1] )."\" /> ";
+			$out .= __('j.mp API Key', $this->textdomain_name)."<input type=\"text\" name=\"jmp_api\" id=\"jmp_api\" size=\"30\" value=\"".htmlspecialchars( $options['jmp'][2] )."\" /> ";
+			$out .= "<br />\n";
+			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"tinyurl\" value=\"tinyurl\" ".($tinyurl ? 'checked="checked " ' : '')."/> ";
+			$out .= '<a href="http://tinyurl.com/" title="TinyURL.com - shorten that long URL into a tiny URL">TinyURL</a>';
+			$out .= "<br />\n";
+			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"isgd\" value=\"isgd\" ".($isgd ? 'checked="checked " ' : '')."/> ";
+			$out .= '<a href="http://is.gd/" title="is.gd URL Shortener - The Shortest URLs Around">is.gd</a>';
+			$out .= "<br />\n";
+			$out .= "<input type=\"radio\" name=\"shortlink\" id=\"other\" value=\"other\" ".($other ? 'checked="checked " ' : '')."/> ";
+			$out .= __('Other Service', $this->textdomain_name) . ' : ';
+			$out .= "<input type=\"text\" name=\"other_tinyurl_url\" id=\"other_tinyurl_url\" size=\"100\" value=\"".htmlspecialchars( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')) && $options['other_tinyurl'][1] === SimpleTweet::TWEET_TINYURL_URL ? '' : $options['other_tinyurl'][1])."\" /> ";
+			$out .= "</td>";
+			$out .= "</tr>\n";
+
+			$out .= "<tr>";
+			$out .= "<th>".__('Separator between message and Permalink', $this->textdomain_name)."</th>";
+			$out .= "<td><input type=\"text\" name=\"separator\" id=\"separator\" size=\"50\" value=\"{$options['separator']}\" /></td>";
+			$out .= "</tr>\n";
+
+			$out .= "<tr>";
+			$out .= "<th></th>";
+			$out .= "<td>";
+			$out .= "<input type=\"checkbox\" name=\"add_content\" id=\"add_content\" value=\"on\" style=\"margin-right:0.5em;\" ".($options['add_content'] ? " checked=\"true\"" : "")." />";
+			$out .= __("Add \"Tweet this\" link", $this->textdomain_name);
+			$out .= "</td>";
+			$out .= "</tr>\n";
+
+			$out .= "<tr>";
+			$out .= "<th>".__('Tweet this link', $this->textdomain_name)."</th>";
+			$out .= "<td><input type=\"text\" name=\"tweet_this_link\" id=\"tweet_this_link\" size=\"100\" value=\"".htmlspecialchars($options['tweet_this_link'])."\" /></td>";
+			$out .= "</tr>\n";
+
+			$out .= "<tr>";
+			$out .= "<th>".__('Tweet this text', $this->textdomain_name)."</th>";
+			$out .= "<td><input type=\"text\" name=\"tweet_this_text\" id=\"tweet_this_text\" size=\"100\" value=\"".htmlspecialchars($options['tweet_this_text'])."\" /></td>";
+			$out .= "</tr>\n";
+
+			$out .= "<tr>";
+			$out .= "<th></th>";
+			$out .= '<td><span class="description">';
+			$out .= __('The following characters are converted respectively.', $this->textdomain_name).'<br />';
+			$out .= '%TWITTER_ID% - '.__('Twitter ID', $this->textdomain_name).'<br />';
+			$out .= '%SITE_NAME% - '.__('Site Name', $this->textdomain_name).'<br />';
+			$out .= '%POST_NO% - '.__('Post No.', $this->textdomain_name).'<br />';
+			$out .= '%POST_TITLE% - '.__('Post Title', $this->textdomain_name).'<br />';
+			$out .= '%POST_EXCERPT% - '.__('Post Excerpt', $this->textdomain_name).'<br />';
+			$out .= '%PERMALINK% - '.__('Permalink', $this->textdomain_name).'<br />';
+			$out .= '</span></td>';
+			$out .= "</tr>\n";
 		}
-		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"bitly\" value=\"bitly\" ".($bitly ? 'checked="checked " ' : '')."/> ";
-		$out .= '<a href="http://bit.ly/" title="bit.ly, a simple url shortener">bit.ly</a> : ';
-		$out .= __('User Name', $this->textdomain_name)."<input type=\"text\" name=\"bitly_name\" id=\"bitly_name\" size=\"20\" value=\"".htmlspecialchars( $options['bitly'][1] )."\" /> ";
-		$out .= __('bit.ly API Key', $this->textdomain_name)."<input type=\"text\" name=\"bitly_api\" id=\"bitly_api\" size=\"30\" value=\"".htmlspecialchars( $options['bitly'][2] )."\" /> ";
-		$out .= "<br />\n";
-		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"jmp\" value=\"jmp\" ".($jmp ? 'checked="checked " ' : '')."/> ";
-		$out .= '<a href="http://j.mp/" title="j.mp, a simple url shortener">j.mp</a> : ';
-		$out .= __('User Name', $this->textdomain_name)."<input type=\"text\" name=\"jmp_name\" id=\"jmp_name\" size=\"20\" value=\"".htmlspecialchars( $options['jmp'][1] )."\" /> ";
-		$out .= __('j.mp API Key', $this->textdomain_name)."<input type=\"text\" name=\"jmp_api\" id=\"jmp_api\" size=\"30\" value=\"".htmlspecialchars( $options['jmp'][2] )."\" /> ";
-		$out .= "<br />\n";
-		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"tinyurl\" value=\"tinyurl\" ".($tinyurl ? 'checked="checked " ' : '')."/> ";
-		$out .= '<a href="http://tinyurl.com/" title="TinyURL.com - shorten that long URL into a tiny URL">TinyURL</a>';
-		$out .= "<br />\n";
-		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"isgd\" value=\"isgd\" ".($isgd ? 'checked="checked " ' : '')."/> ";
-		$out .= '<a href="http://is.gd/" title="is.gd URL Shortener - The Shortest URLs Around">is.gd</a>';
-		$out .= "<br />\n";
-		$out .= "<input type=\"radio\" name=\"shortlink\" id=\"other\" value=\"other\" ".($other ? 'checked="checked " ' : '')."/> ";
-		$out .= __('Other Service', $this->textdomain_name) . ' : ';
-		$out .= "<input type=\"text\" name=\"other_tinyurl_url\" id=\"other_tinyurl_url\" size=\"100\" value=\"".htmlspecialchars( !(function_exists('get_shortlink') || function_exists('wpme_get_shortlink')) && $options['other_tinyurl'][1] === SimpleTweet::TWEET_TINYURL_URL ? '' : $options['other_tinyurl'][1])."\" /> ";
-		$out .= "</td>";
-		$out .= "</tr>\n";
-
-		$out .= "<tr>";
-		$out .= "<th>".__('Separator between message and Permalink', $this->textdomain_name)."</th>";
-		$out .= "<td><input type=\"text\" name=\"separator\" id=\"separator\" size=\"50\" value=\"{$options['separator']}\" /></td>";
-		$out .= "</tr>\n";
-
-		$out .= "<tr>";
-		$out .= "<th></th>";
-		$out .= "<td>";
-		$out .= "<input type=\"checkbox\" name=\"add_content\" id=\"add_content\" value=\"on\" style=\"margin-right:0.5em;\" ".($options['add_content'] ? " checked=\"true\"" : "")." />";
-		$out .= __("Add \"Tweet this\" link", $this->textdomain_name);
-		$out .= "</td>";
-		$out .= "</tr>\n";
-
-		$out .= "<tr>";
-		$out .= "<th>".__('Tweet this link', $this->textdomain_name)."</th>";
-		$out .= "<td><input type=\"text\" name=\"tweet_this_link\" id=\"tweet_this_link\" size=\"100\" value=\"".htmlspecialchars($options['tweet_this_link'])."\" /></td>";
-		$out .= "</tr>\n";
-
-		$out .= "<tr>";
-		$out .= "<th>".__('Tweet this text', $this->textdomain_name)."</th>";
-		$out .= "<td><input type=\"text\" name=\"tweet_this_text\" id=\"tweet_this_text\" size=\"100\" value=\"".htmlspecialchars($options['tweet_this_text'])."\" /></td>";
-		$out .= "</tr>\n";
-
-		$out .= "<tr>";
-		$out .= "<th></th>";
-		$out .= '<td><span class="description">';
-		$out .= __('The following characters are converted respectively.', $this->textdomain_name).'<br />';
-		$out .= '%TWITTER_ID% - '.__('Twitter ID', $this->textdomain_name).'<br />';
-		$out .= '%SITE_NAME% - '.__('Site Name', $this->textdomain_name).'<br />';
-		$out .= '%POST_NO% - '.__('Post No.', $this->textdomain_name).'<br />';
-		$out .= '%POST_TITLE% - '.__('Post Title', $this->textdomain_name).'<br />';
-		$out .= '%POST_EXCERPT% - '.__('Post Excerpt', $this->textdomain_name).'<br />';
-		$out .= '%PERMALINK% - '.__('Permalink', $this->textdomain_name).'<br />';
-		$out .= '</span></td>';
-		$out .= "</tr>\n";
 
 		if ( $is_admin ) {
 			$out .= "<tr>";
