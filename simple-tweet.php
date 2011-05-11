@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.7.2
+Version: 1.3.8
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -99,6 +99,9 @@ class SimpleTweet {
 	const TWEET_METAKEY_RES = '_twet_result';
 	const TWEET_METAKEY_URL = '_tiny_url';
 
+	const MESSAGE_FLAG = "simple_tweet_warn";
+
+
 	// Options
 	private $options;
 	private $current_user_options;
@@ -131,6 +134,7 @@ class SimpleTweet {
 		'access_token' => null ,
 		'access_token_secret' => null ,
 		'pin' => null ,
+		'oauth_reset' => false ,
 		);
 
 	private $consumer_key    = null;
@@ -180,24 +184,30 @@ class SimpleTweet {
 			add_action('personal_options_update', array(&$this,'user_profile_update'));
 			add_action('edit_user_profile_update', array(&$this,'user_profile_update'));
 
+			if (get_transient(self::MESSAGE_FLAG)) {
+				add_action("admin_notices", array(&$this, "admin_notice"));
+			}
+
+			// post publish
+			add_action('publish_post', array(&$this, 'publish_post'));
+			add_action('publish_future_post', array(&$this, 'publish_post'));
+
+			// for ktai-entry
+			add_action('publish_phone', array(&$this, 'publish_post'));
+
 		} else {
 			// add content
 			add_filter('the_content', array (&$this, 'add_content'));
 			//add_filter('the_content', array (&$this, 'content_tweet'));
 		}
 
-		// post publish
-		add_action('publish_post', array(&$this, 'publish_post'));
-		add_action('publish_future_post', array(&$this, 'publish_post'));
-
-		// for ktai-entry
-		add_action('publish_phone', array(&$this, 'publish_post'));
-
 		// register activation / deactivation
-		if ( function_exists('register_activation_hook') )
+		if ( function_exists('register_activation_hook') ) {
 			register_activation_hook(__FILE__, array(&$this, 'activation'));
-		if ( function_exists('register_deactivation_hook') )
+		}
+		if ( function_exists('register_deactivation_hook') ) {
 			register_deactivation_hook(__FILE__, array(&$this, 'deactivation'));
+		}
 	}
 
 	//*****************************************************************************
@@ -264,6 +274,20 @@ class SimpleTweet {
 			$options = array_merge((array) $options, (array) $user_options);
 		}
 
+		if (isset($options['oauth_reset']) && $options['oauth_reset']) {
+			$options['pin'] = null;
+			$options['oauth_token'] = null;
+			$options['access_token'] = null;
+			$options['access_token_secret'] = null;
+		}
+
+		if (isset($user_options['oauth_reset']) && $user_options['oauth_reset']) {
+			$user_options['pin'] = null;
+			$user_options['oauth_token'] = null;
+			$user_options['access_token'] = null;
+			$user_options['access_token_secret'] = null;
+		}
+
 		return array($options, $user_options);
 	}
 
@@ -311,10 +335,11 @@ class SimpleTweet {
 
 		$users_of_blog = get_users_of_blog();
 		foreach ( (array) $users_of_blog as $user ) {
-			if (function_exists('delete_user_meta'))
+			if (function_exists('delete_user_meta')) {
 				delete_user_meta($user->ID, $this->option_name); 
-			else
+			} else {
 				delete_usermeta($user->ID, $this->option_name);
+			}
 		}
 		unset($users_of_blog);
 
@@ -627,23 +652,27 @@ class SimpleTweet {
 				$this->tweet_msg = $tweet_msg;
 
 				$tweet_result = FALSE;
-				if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->options['access_token']) && !is_null($this->options['access_token_secret']) )
+				if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->options['access_token']) && !is_null($this->options['access_token_secret']) ) {
 					$tweet_result = $this->_post_twitter_OAuth($tweet_msg, $this->options['access_token'], $this->options['access_token_secret']);
-				//if ( $tweet_result === FALSE )
+				}
+				//if ( $tweet_result === FALSE ) {
 				//	$tweet_result = $this->_post_twitter($tweet_msg, $this->options['user'], $this->options['password']);
+				//}
 
 				if ( $tweet_result !== FALSE ) {
 					$tweet_id = $this->_get_tweet_id($tweet_result);
 					$this->_log .= "id:{$tweet_id}\n";
-					if ( $this->_update_post_meta($post_id, self::TWEET_METAKEY_SID, $tweet_id) )
+					if ( $this->_update_post_meta($post_id, self::TWEET_METAKEY_SID, $tweet_id) ) {
 						$this->_log = "*** OK! ***\n\n" . $this->_log;
-					else
+					} else {
 						$this->_log = "** ERROR **\n\n" . $this->_log;
+					}
 				} else {
 					$this->_log = "** ERROR **\n\n" . $tweet_result . "\n" . $this->_log;
 				}
 
 				$this->_update_post_meta($post_id, self::TWEET_METAKEY_RES, $tweet_result);
+				set_transient(self::MESSAGE_FLAG, $tweet_result, 60);
 			}
 		}
 
@@ -871,7 +900,9 @@ class SimpleTweet {
 	// Get TweetID
 	//*****************************************************************************
 	private function _get_tweet_id($result = '') {
-		if (empty($result)) return '';
+		if (empty($result)) {
+			return '';
+		}
 
 		$tweet_id = '';
 //		if ( function_exists('simplexml_load_string') ) {
@@ -885,8 +916,8 @@ class SimpleTweet {
 
 		if ( preg_match_all('/<id>([0-9]+)<\/id>/i', $result, $matches, PREG_PATTERN_ORDER) ) {
 			$tweet_id = $matches[1][0];
-			unset($matches);
 		}
+		unset($matches);
 
 		return $tweet_id;
 	}
@@ -992,10 +1023,11 @@ class SimpleTweet {
 			list($options, $current_user_options) = $this->_get_options( $user_id );
 			$current_user_options = $this->_init_options( $current_user_options );
 			$current_user_options = $this->_get_post_data( $_POST, $current_user_options );
-			if (function_exists('update_user_meta'))
+			if (function_exists('update_user_meta')) {
 				update_user_meta($user_id, $this->option_name, $current_user_options);
-			else
+			} else {
 				update_usermeta($user_id, $this->option_name, $current_user_options);
+			}
 		}
 	}
 
@@ -1007,17 +1039,20 @@ class SimpleTweet {
 		$request = $this->_strip_array($request);
 
 		$options['user']       = $request['twitter_usr'];
-		if ( isset($request['twitter_pwd']) && trim($request['twitter_pwd']) !== '' )
+		if ( isset($request['twitter_pwd']) && trim($request['twitter_pwd']) !== '' ) {
 			$options['password'] = $request['twitter_pwd'];
+		}
 
 		$twitter_pin  = $options['pin'];
 		$access_token = $options['access_token'];
 		$access_token_secret = $options['access_token_secret'];
 		if ( class_exists('TwitterOAuth') && !is_null($this->consumer_key) && !is_null($this->consumer_secret) && !is_null($this->request_token) && !is_null($this->request_token_secret) ) {
 //			$twitter_pin = $access_token = $access_token_secret = null;
-			$twitter_pin = (isset($request['twitter_pin']) && !empty($request['twitter_pin'])
+			$twitter_pin = (
+				isset($request['twitter_pin']) && !empty($request['twitter_pin'])
 				? trim($request['twitter_pin'])
-				: null); 
+				: null
+				);
 			if ( !is_null($twitter_pin) && $twitter_pin !== $options['pin'] ) {
 				$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret, $this->request_token, $this->request_token_secret);
 				$token = $oauth->getAccessToken(null, $twitter_pin);
@@ -1036,14 +1071,16 @@ class SimpleTweet {
 			$this->request_token = $this->request_token_secret = null;
 		}
 		if ( isset($request['oauth_reset']) && $request['oauth_reset'] == 'on' ) {
-			$options['pin'] = null;
+			$options['pin'] = $this->options['pin'] = null;
 			$options['oauth_token'] = $this->oauth_token = null;
-			$options['access_token'] = null;
-			$options['access_token_secret'] = null;
+			$options['access_token'] = $this->options['access_token'] = null;
+			$options['access_token_secret'] = $this->options['access_token_secret'] = null;
+			$options['oauth_reset'] = true;
 		} else {
-			$options['pin'] = $twitter_pin;
-			$options['access_token'] = $access_token;
-			$options['access_token_secret'] = $access_token_secret;
+			$options['pin'] = $this->options['pin'] = $twitter_pin;
+			$options['access_token'] = $this->options['access_token'] = $access_token;
+			$options['access_token_secret'] = $this->options['access_token_secret'] = $access_token_secret;
+			$options['oauth_reset'] = false;
 		}
 		$options['request_token'] = $this->request_token;
 		$options['request_token_secret'] = $this->request_token_secret;
@@ -1100,6 +1137,8 @@ class SimpleTweet {
 			}
 		}
 
+		$this->_update_options();
+
 		return $options;
 	}
 
@@ -1138,7 +1177,7 @@ class SimpleTweet {
 					$out .= "</tr>\n";
 
 				} elseif ( !is_null($this->consumer_key) && !is_null($this->consumer_secret) ) {
-					if ( is_null($options['access_token']) || is_null($options['access_token_secret']) ) {
+					if ($options['oauth_reset'] || is_null($options['access_token']) || is_null($options['access_token_secret'])) {
 						$this->request_token = $this->request_token_secret = null;
 						$oauth = new TwitterOAuth($this->consumer_key, $this->consumer_secret);
 						$token = $oauth->getRequestToken();
@@ -1413,6 +1452,35 @@ class SimpleTweet {
 		return $tweet_this_link;
 	}
 
+	//*****************************************************************************
+	// Show admin notice
+	//*****************************************************************************
+	public function admin_notice() {
+		$tweet_result = get_transient(self::MESSAGE_FLAG);
+		$tweet_id = ($tweet_result !== FALSE ? $this->_get_tweet_id($tweet_result) : '');
+		$tweet_text = '';
+
+		if (!empty($tweet_id)) {
+			if ( preg_match('/<text>([^<]*)<\/text>/i', $tweet_result, $match) ) {
+				$tweet_text = $match[1];
+			}
+			unset($match);
+			$this->_show_message('Simple Tweet: Success! Tweet ID ' . $tweet_id . (!empty($tweet_text) ? '<br />'.$tweet_text : ''));
+		} else {
+			if ( preg_match('/<error>([^<]*)<\/error>/i', $tweet_result, $match) ) {
+				$tweet_text = $match[1];
+			}
+			unset($match);
+			$this->_show_message('Simple Tweet: Error!!! - ' . $tweet_text, true);
+		}
+
+		delete_transient(self::MESSAGE_FLAG);
+	}
+
+	private function _show_message($message, $errormsg = false) {
+		echo '<div id="message" class="'.($errormsg ? 'error' : 'updated fade').'">';
+		echo "<p><strong>$message</strong></p></div>\n";
+	}
 }
 
 /******************************************************************************
