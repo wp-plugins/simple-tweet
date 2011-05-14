@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.8.1
+Version: 1.3.8.2
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -155,7 +155,7 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Constructor
 	//*****************************************************************************
-	public function __construct() {
+	function __construct() {
 		global $user_id;
 
 		$this->_init_variables();
@@ -166,8 +166,10 @@ class SimpleTweet {
 		list($options, $current_user_options) = $this->_get_options();
 		$this->options = $this->_init_options( $options );
 
+                $this->consumer_key    = $this->options['consumer_key'];
+                $this->consumer_secret = $this->options['consumer_secret'];
 
-		$this->request_token   = $this->options['request_token'];
+		$this->request_token        = $this->options['request_token'];
 		$this->request_token_secret = $this->options['request_token_secret'];
 
 		$this->tweet_msg = '';
