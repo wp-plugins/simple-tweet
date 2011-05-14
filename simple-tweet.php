@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.8
+Version: 1.3.8.2
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -76,7 +76,7 @@ function tweet_this_link($inreply_to = FALSE, $echo = TRUE) {
  *************************************************************************************/
 class SimpleTweet {
 	public $twitter_client_name = 'SimpleTweetWP';
-	public $twitter_client_version = '1.3.7';
+	public $twitter_client_version = '1.3.8';
 	public $twitter_client_url = 'http://wordpress.org/extend/plugins/simple-tweet/';
 
 	// Constant
@@ -155,7 +155,7 @@ class SimpleTweet {
 	//*****************************************************************************
 	// Constructor
 	//*****************************************************************************
-	public function __construct() {
+	function __construct() {
 		global $user_id;
 
 		$this->_init_variables();
@@ -166,9 +166,10 @@ class SimpleTweet {
 		list($options, $current_user_options) = $this->_get_options();
 		$this->options = $this->_init_options( $options );
 
-		$this->consumer_key    = $this->options['consumer_key'];
-		$this->consumer_secret = $this->options['consumer_secret'];
-		$this->request_token   = $this->options['request_token'];
+                $this->consumer_key    = $this->options['consumer_key'];
+                $this->consumer_secret = $this->options['consumer_secret'];
+
+		$this->request_token        = $this->options['request_token'];
 		$this->request_token_secret = $this->options['request_token_secret'];
 
 		$this->tweet_msg = '';
@@ -188,18 +189,18 @@ class SimpleTweet {
 				add_action("admin_notices", array(&$this, "admin_notice"));
 			}
 
-			// post publish
-			add_action('publish_post', array(&$this, 'publish_post'));
-			add_action('publish_future_post', array(&$this, 'publish_post'));
-
-			// for ktai-entry
-			add_action('publish_phone', array(&$this, 'publish_post'));
-
 		} else {
 			// add content
 			add_filter('the_content', array (&$this, 'add_content'));
 			//add_filter('the_content', array (&$this, 'content_tweet'));
 		}
+
+		// post publish
+		add_action('publish_post', array(&$this, 'publish_post'));
+		add_action('publish_future_post', array(&$this, 'publish_post'));
+
+		// for ktai-entry
+		add_action('publish_phone', array(&$this, 'publish_post'));
 
 		// register activation / deactivation
 		if ( function_exists('register_activation_hook') ) {
