@@ -266,7 +266,7 @@ class SimpleTweet {
 			if (function_exists('get_user_meta')) {
 				$user_options = get_user_meta($user_id, $this->option_name, true);
 				if (!is_array($user_options)) {
-					$user_options = get_usermeta($user_id, $this->option_name);
+					$user_options = get_user_meta($user_id, $this->option_name);
 					update_user_meta($user_id, $this->option_name, $user_options);
 				}
 			} else {
