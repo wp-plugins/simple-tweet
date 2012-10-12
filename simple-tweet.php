@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.3.8.2
+Version: 1.3.8.3
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto
@@ -83,7 +83,7 @@ class SimpleTweet {
 	const TWEET_MAX = 140;
 	const TWEET_TIMEOUT = 30;
 	const TWEET_HOME_URL = 'http://twitter.com/';
-	const TWEET_SENT_URL = 'http://twitter.com/statuses/update.xml';
+	const TWEET_SENT_URL = 'http://api.twitter.com/1/statuses/update.xml';
 	const TWEET_OAUTH_CLIENTS_URL = 'http://twitter.com/oauth_clients';
 	const TWEET_TINYURL_LIMIT = 15552000;	// 60 * 60 * 24 * 30 * 6
 	const TWEET_TINYURL_URL = 'http://tinyurl.com/api-create.php?url=';
