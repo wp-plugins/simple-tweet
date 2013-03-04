@@ -90,6 +90,9 @@ Released under the [GPL license](http://www.gnu.org/copyleft/gpl.html).
 
 == Changelog == 
 
+**1.4.0 -March 4, 2013**
+Support Twitter API ver.1.1
+
 **1.3.3 - May 1, 2010**  
 Minor bug fixes.
 
