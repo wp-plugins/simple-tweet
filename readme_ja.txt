@@ -3,8 +3,8 @@ Contributors: wokamoto
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJCY7XB8F4&lc=JP&item_name=WordPress%20Plugins&item_number=wp%2dplugins&currency_code=JPY&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: twitter, posts
 Requires at least: 2.8
-Tested up to: 3.1.2
-Stable tag: 1.3.8.2
+Tested up to: 3.5.1
+Stable tag: 1.4.0
 
 WordPress に新規投稿した際、自動的に Twitter に通知するプラグインです。
 
