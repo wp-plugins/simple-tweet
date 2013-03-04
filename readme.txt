@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJ
 Tags: twitter, posts, OAuth, shortlink
 Requires at least: 2.8
 Tested up to: 3.5.1
-Stable tag: 1.4.0.1
+Stable tag: 1.4.0.2
 
 This is a plugin creating a new tweet including a URL of new post on your wordpress.
 

@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Simple Tweet
-Version: 1.4.0.1
+Version: 1.4.0.2
 Plugin URI: http://wppluginsj.sourceforge.jp/simple-tweet/
 Description: This is a plugin creating a new tweet including a URL of new post on your wordpress.
 Author: wokamoto

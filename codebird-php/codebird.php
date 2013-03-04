@@ -592,7 +592,7 @@ class Codebird
                 return $httpmethod;
             }
         }
-        throw new Exception('Can\'t find HTTP method to use for "' . $method . '".');
+        throw new Exception("Can't find HTTP method to use for '{$method}'");
     }
 
     /**
