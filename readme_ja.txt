@@ -88,6 +88,9 @@ OAuth の設定を削除したい場合は、「Oauth Reset」のチェックボ
 
 == Changelog == 
 
+**1.4.0 -March 4, 2013**
+Support Twitter API ver.1.1
+
 **1.3.3 - 2010年5月1日**  
 細かな不具合の修正
 
